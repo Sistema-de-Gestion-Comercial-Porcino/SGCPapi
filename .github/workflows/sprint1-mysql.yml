@@ -1,0 +1,49 @@
+name: Sprint 1 · MySQL
+on:
+  push:
+    branches: [main, sprint1-implementacion]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Iniciar MySQL temporal
+        shell: bash
+        run: |
+          sgcp_password="Sgcp-$(openssl rand -hex 24)"
+          echo "::add-mask::$sgcp_password"
+          echo "SGCP_MYSQL_TEST=Server=127.0.0.1;Port=3306;User ID=root;Password=$sgcp_password;SslMode=Preferred" >> "$GITHUB_ENV"
+          docker run -d --name sgcp-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD="$sgcp_password" mysql:8.4
+          for intento in $(seq 1 60); do
+            if docker exec sgcp-mysql mysql -uroot -p"$sgcp_password" -e 'SELECT 1' > /dev/null 2>&1; then exit 0; fi
+            sleep 2
+          done
+          docker logs sgcp-mysql
+          exit 1
+      - name: Compilar
+        run: dotnet build SGCPapi.sln --configuration Release --warnaserror
+      - name: Revisar migraciones
+        run: |
+          dotnet tool restore
+          dotnet ef migrations has-pending-model-changes --project src/SGCP.Api --configuration Release --no-build
+          dotnet ef migrations script --project src/SGCP.Api --configuration Release --no-build --output artifacts/InicialSprint1.sql
+      - name: Aplicar migración y probar API en MySQL
+        run: dotnet run --project tests/SGCP.Verificacion --configuration Release --no-build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: migracion-mysql-sprint1
+          path: artifacts/InicialSprint1.sql
+      - name: Detener instancia temporal
+        if: always()
+        run: docker rm -f sgcp-mysql
