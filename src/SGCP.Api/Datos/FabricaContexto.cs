@@ -13,6 +13,6 @@ public class FabricaContexto : IDesignTimeDbContextFactory<SgcpContext>
             .AddUserSecrets<SgcpContext>(optional: true)
             .AddEnvironmentVariables()
             .Build();
-        return new(new DbContextOptionsBuilder<SgcpContext>().UseMySQL(CadenaConexion.Exigir(config)).Options);
+        return new(new DbContextOptionsBuilder<SgcpContext>().UseMySQL(CadenaConexion.ParaDisenio(config)).Options);
     }
 }
