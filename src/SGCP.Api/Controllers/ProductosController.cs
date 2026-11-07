@@ -15,7 +15,8 @@ public class ProductosController(SgcpContext db, ServicioCatalogo servicio, Acto
     private IQueryable<object> Proyectar(IQueryable<SGCP.Api.Dominio.Entidades.Producto> q)
     {
         var ahora = DateTime.UtcNow;
-        var costos = actor.Tiene("costos.consultar");
+        var costos = actor.Tiene("costos.consultar") && !actor.Comprador;
+        var verPrecio = actor.Tiene("precios.consultar");
         return q.Select(x => new
         {
             x.Id,
@@ -33,7 +34,7 @@ public class ProductosController(SgcpContext db, ServicioCatalogo servicio, Acto
                 x.ClasificacionProducto.Nombre,
                 x.ClasificacionProducto.Familia
             },
-            PrecioVigente = x.Precios.Where(p => p.VigenteDesde <= ahora && (p.VigenteHasta == null || p.VigenteHasta > ahora))
+            PrecioVigente = x.Precios.Where(p => verPrecio && p.VigenteDesde <= ahora && (p.VigenteHasta == null || p.VigenteHasta > ahora))
                     .Select(p => new { p.PrecioVenta, CostoReferencia = costos ? (decimal?)p.CostoReferencia : null, p.VigenteDesde })
                     .FirstOrDefault()
         });
@@ -76,5 +77,8 @@ public class ProductosController(SgcpContext db, ServicioCatalogo servicio, Acto
             Authorize(Policy = "catalogo.administrar")]
     public async Task<IActionResult> Estado(Guid id,
             EstadoPeticion p)
-    { await servicio.EstadoProducto(id, p.Activo); return NoContent(); }
+    {
+        await servicio.EstadoProducto(id, p.Activo);
+        return NoContent();
+    }
 }

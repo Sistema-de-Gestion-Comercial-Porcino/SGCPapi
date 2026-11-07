@@ -24,25 +24,25 @@ public static class DatosIniciales
         Dictionary<string, string[]> roles = new()
         {
             ["ADMINISTRACION"] = Permisos.Todos,
-            ["VENTAS"] = Permisos.Todos.Where(x => x.StartsWith("clientes.")
-                || x.StartsWith("cotizaciones.")
-                || x.StartsWith("pedidos.")
-                || x == "catalogo.consultar"
-                || x == "costos.consultar")
-                    .ToArray(),
-            ["PRODUCCION"] = ["catalogo.consultar", "pedidos.consultar"],
-            ["ALMACEN"] = ["catalogo.consultar", "pedidos.consultar"],
-            ["ENTREGA"] = ["catalogo.consultar"],
-            ["COMPRADOR"] = ["catalogo.consultar", "cotizaciones.consultar", "cotizaciones.responder", "pedidos.consultar"]
+            ["VENTAS"] = ["clientes.consultar", "clientes.administrar", "catalogo.consultar", "costos.consultar",
+                "precios.consultar", "cotizaciones.consultar", "cotizaciones.administrar", "cotizaciones.responder",
+                "pedidos.consultar", "pedidos.administrar", "cargos.administrar", "pagos.administrar", "saldos.consultar",
+                "reportes.consultar", "entregas.revisar", "fiscal.administrar"],
+            ["PRODUCCION"] = ["operacion.consultar", "catalogo.consultar", "produccion.consultar", "produccion.administrar", "inventario.consultar", "reportes.consultar"],
+            ["ALMACEN"] = ["operacion.consultar", "catalogo.consultar", "produccion.consultar", "inventario.consultar", "inventario.administrar", "frio.administrar", "reportes.consultar"],
+            ["ENTREGA"] = ["operacion.consultar", "catalogo.consultar", "entregas.administrar", "frio.administrar", "reportes.consultar"],
+            ["COMPRADOR"] = ["catalogo.consultar", "precios.consultar", "cotizaciones.consultar", "cotizaciones.responder", "pedidos.consultar", "reportes.consultar"]
         };
         foreach (var (nombre, codigos) in roles)
-            if (!await db.Roles.AnyAsync(x => x.Nombre == nombre))
-                db.Roles.Add(new Rol
-                {
-                    Nombre = nombre,
-                    Descripcion = nombre,
-                    Permisos = permisos.Where(x => codigos.Contains(x.Codigo)).ToList()
-                });
+        {
+            var rol = await db.Roles.Include(x => x.Permisos).SingleOrDefaultAsync(x => x.Nombre == nombre);
+            if (rol is null)
+            {
+                rol = new Rol { Nombre = nombre, Descripcion = nombre };
+                db.Roles.Add(rol);
+            }
+            rol.Permisos = permisos.Where(x => codigos.Contains(x.Codigo)).ToList();
+        }
         await db.SaveChangesAsync();
         if (!await db.Usuarios.AnyAsync())
         {

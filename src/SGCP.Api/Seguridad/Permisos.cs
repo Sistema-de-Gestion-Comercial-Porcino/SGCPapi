@@ -14,5 +14,9 @@ public static class Permisos
             "cotizaciones.administrar",
             "cotizaciones.responder",
             "pedidos.consultar",
-            "pedidos.administrar"];
+            "pedidos.administrar",
+            "operacion.consultar", "precios.consultar", "produccion.consultar", "produccion.administrar",
+            "inventario.consultar", "inventario.administrar", "frio.administrar", "cargos.administrar",
+            "pagos.administrar", "saldos.consultar", "entregas.administrar", "entregas.revisar",
+            "reportes.consultar", "fiscal.administrar"];
 }

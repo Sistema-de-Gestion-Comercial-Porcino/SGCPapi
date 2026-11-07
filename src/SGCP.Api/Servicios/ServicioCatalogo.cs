@@ -13,6 +13,9 @@ public class ServicioCatalogo(SgcpContext db, UnidadTrabajo unidad, ServicioAudi
         var c = id is null ? new ClasificacionProducto() : await db.ClasificacionesProducto.FindAsync(id) ?? throw new ReglaException("NO_ENCONTRADO",
                 "Clasificación no encontrada.",
                 404);
+        if (id is not null && (c.Familia != p.Familia || c.Nombre != p.Nombre.Trim()) &&
+            await db.Lotes.AnyAsync(l => db.Productos.Any(pr => pr.Id == l.ProductoId && pr.ClasificacionProductoId == id)))
+            throw new ReglaException("CLASIFICACION_CON_HISTORIAL", "El tipo de carne o derivado ya tiene lotes; crea una clasificación nueva.");
         c.Codigo = p.Codigo.Trim().ToUpperInvariant();
         c.Nombre = p.Nombre.Trim();
         c.Familia = p.Familia;
@@ -52,13 +55,15 @@ public class ServicioCatalogo(SgcpContext db, UnidadTrabajo unidad, ServicioAudi
                 404);
         if (id is not null
             && c.UnidadVenta != p.UnidadVenta
-                                        && (await db.PreciosProducto.AnyAsync(x => x.ProductoId == id) || await db.DetallesCotizacion.AnyAsync(x => x.ProductoId == id)))
+                                        && (await db.PreciosProducto.AnyAsync(x => x.ProductoId == id) || await db.DetallesCotizacion.AnyAsync(x => x.ProductoId == id) || await db.Lotes.AnyAsync(x => x.ProductoId == id)))
             throw new ReglaException("UNIDAD_INCOMPATIBLE", "La unidad tiene precios u operaciones asociados; crea otra presentación.");
         c.Codigo = p.Codigo.Trim().ToUpperInvariant();
         c.Nombre = p.Nombre.Trim();
         c.Presentacion = p.Presentacion.Trim();
         c.UnidadVenta = p.UnidadVenta;
         c.Descripcion = p.Descripcion ?? "";
+        if (id is not null && c.ClasificacionProductoId != p.ClasificacionProductoId && await db.Lotes.AnyAsync(x => x.ProductoId == id))
+            throw new ReglaException("PRODUCTO_CON_HISTORIAL", "No se cambia el tipo de carne o derivado de un producto con lotes.");
         c.ClasificacionProductoId = p.ClasificacionProductoId;
         if (await db.Productos.AnyAsync(x => x.Id != c.Id && x.Codigo == c.Codigo))
             throw new ReglaException("CODIGO_DUPLICADO", "El código de producto ya existe.");
@@ -73,6 +78,8 @@ public class ServicioCatalogo(SgcpContext db, UnidadTrabajo unidad, ServicioAudi
             .SingleOrDefaultAsync(x => x.Id == id) ?? throw new ReglaException("NO_ENCONTRADO", "Producto no encontrado.", 404);
         if (activo && !c.ClasificacionProducto.Activo)
             throw new ReglaException("CLASIFICACION_NO_ACTIVA", "Activa primero su clasificación.");
+        if (!activo && await db.Existencias.AnyAsync(x => x.ProductoId == id && x.CantidadFisica > 0))
+            throw new ReglaException("PRODUCTO_CON_EXISTENCIA", "Resuelve las existencias físicas antes de desactivar el producto.");
         if (!activo && (await db.DetallesPedido.AnyAsync(x => x.ProductoId == id && x.Pedido.EstadoComercial != EstadoComercial.CANCELADO && x.Pedido.EstadoComercial != EstadoComercial.CERRADO) || await db.DetallesCotizacion.AnyAsync(x => x.ProductoId == id && (x.Cotizacion.Estado == EstadoCotizacion.BORRADOR || ((x.Cotizacion.Estado == EstadoCotizacion.PRESENTADA || x.Cotizacion.Estado == EstadoCotizacion.ACEPTADA) && x.Cotizacion.VigenteHasta > DateTime.UtcNow)))))
             throw new ReglaException("PRODUCTO_EN_USO", "El producto tiene operaciones comerciales pendientes.");
         c.Activo = activo;

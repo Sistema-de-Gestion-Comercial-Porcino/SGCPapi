@@ -43,6 +43,21 @@ public class ServicioConfirmarPedido(SgcpContext db,
         }
         var pedido = builder.Construir();
         db.Pedidos.Add(pedido);
+        decimal acumulado = 0;
+        foreach (var detalle in pedido.Detalles.OrderBy(x => x.Id))
+        {
+            var previo = Consultas.Dinero(acumulado);
+            acumulado += detalle.CantidadConfirmada * detalle.PrecioAcordado;
+            db.Cargos.Add(new SGCP.Api.Dominio.Entidades.Cargo
+            {
+                PedidoId = pedido.Id,
+                DetallePedidoId = detalle.Id,
+                Tipo = TipoCargo.PRODUCTO,
+                Concepto = "Producto del pedido " + pedido.Codigo,
+                Importe = Consultas.Dinero(acumulado) - previo,
+                Fecha = DateTime.UtcNow
+            });
+        }
         auditoria.Registrar("CONFIRMAR", "Pedido", pedido.Id);
         return pedido.Id;
     });
@@ -52,6 +67,26 @@ public class ServicioConfirmarPedido(SgcpContext db,
             .SingleOrDefaultAsync(x => x.Id == id) ?? throw new ReglaException("NO_ENCONTRADO", "Pedido no encontrado.", 404);
         if (x.EstadoComercial != EstadoComercial.CONFIRMADO)
             throw new ReglaException("TRANSICION_INVALIDA", "Solo puedes cancelar un pedido confirmado.");
+        if (await db.Senas.AnyAsync(s => s.PedidoId == id && s.ResueltaEn == null))
+            throw new ReglaException("SENA_SIN_ACUERDO", "Registra el acuerdo de resolución de las señas antes de cancelar; no hay devolución ni retención automáticas.");
+        var detalleIds = x.Detalles.Select(d => d.Id).ToArray();
+        var reservas = await db.Reservas.Where(r => detalleIds.Contains(r.DetallePedidoId) && r.Estado != EstadoReserva.LIBERADA).ToListAsync();
+        if (reservas.Any(r => r.Estado == EstadoReserva.CONSUMIDA))
+            throw new ReglaException("PEDIDO_DESPACHADO", "El pedido ya fue despachado; requiere resolución comercial.");
+        foreach (var reserva in reservas)
+        {
+            reserva.Estado = EstadoReserva.LIBERADA;
+            reserva.MotivoLiberacion = motivo.Trim();
+        }
+        var entrega = await db.Entregas.SingleOrDefaultAsync(e => e.PedidoId == id);
+        if (entrega is not null)
+        {
+            if (entrega.Estado != EstadoEntrega.PREPARADA && entrega.Estado != EstadoEntrega.CANCELADA)
+                throw new ReglaException("PEDIDO_DESPACHADO", "La entrega ya salió; requiere resolución comercial.");
+            entrega.Estado = EstadoEntrega.CANCELADA;
+            entrega.Version++;
+            entrega.ObservacionRecepcion = motivo.Trim();
+        }
         x.EstadoComercial = EstadoComercial.CANCELADO;
         x.MotivoCancelacion = motivo.Trim();
         foreach (var d in x.Detalles)

@@ -36,6 +36,20 @@ public static class Arranque
         b.Services.AddScoped<GeneradorCodigo>();
         b.Services.AddScoped<ServicioCotizaciones>();
         b.Services.AddScoped<ServicioConfirmarPedido>();
+        b.Services.AddScoped<ServicioProduccion>();
+        b.Services.AddScoped<ServicioFinanzas>();
+        b.Services.AddScoped<SGCP.Api.Patrones.Reportes.ReportesFacade>();
+        b.Services.AddSingleton<ExportadorReportes>();
+        b.Services.AddScoped<ServicioFiscal>();
+        b.Services.AddScoped<SGCP.Api.Patrones.Fiscal.IProveedorFiscal, SGCP.Api.Patrones.Fiscal.ProveedorFiscalNoConfiguradoAdapter>();
+        b.Services.AddScoped<ServicioEntregas>();
+        b.Services.AddScoped<SGCP.Api.Patrones.Comercial.SelectorCondicion>();
+        b.Services.AddScoped<SGCP.Api.Patrones.Comercial.IEstrategiaCondicion, SGCP.Api.Patrones.Comercial.CondicionContado>();
+        b.Services.AddScoped<SGCP.Api.Patrones.Comercial.IEstrategiaCondicion, SGCP.Api.Patrones.Comercial.CondicionCredito>();
+        b.Services.AddScoped<ServicioInventario>();
+        b.Services.AddScoped<SGCP.Api.Patrones.Produccion.SelectorFabrica>();
+        b.Services.AddScoped<SGCP.Api.Patrones.Produccion.FabricaResultado, SGCP.Api.Patrones.Produccion.FabricaFaeneo>();
+        b.Services.AddScoped<SGCP.Api.Patrones.Produccion.FabricaResultado, SGCP.Api.Patrones.Produccion.FabricaDerivado>();
         b.Services.AddControllers(o => o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true)
             .AddApplicationPart(typeof(Arranque).Assembly)
             .AddJsonOptions(o => { o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)); o.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles; o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull; });
@@ -71,7 +85,10 @@ public static class Arranque
                     if (!Guid.TryParse(c.Principal?.FindFirstValue("sid"),
                             out var sid) || !Guid.TryParse(c.Principal?.FindFirstValue("sub"),
                             out var uid))
-                    { c.Fail("Sesión inválida"); return; }
+                    {
+                        c.Fail("Sesión inválida");
+                        return;
+                    }
                     var db = c.HttpContext.RequestServices.GetRequiredService<SgcpContext>();
                     var sesion = await db.Sesiones.AsNoTracking()
                         .Include(x => x.Usuario)
@@ -82,7 +99,10 @@ public static class Arranque
                         || sesion.Revocada
                         || sesion.Expira <= DateTime.UtcNow
                         || sesion.Usuario.Estado != EstadoUsuario.ACTIVO)
-                    { c.Fail("Sesión vencida o revocada"); return; }
+                    {
+                        c.Fail("Sesión vencida o revocada");
+                        return;
+                    }
                     c.Principal = new ClaimsPrincipal(new ClaimsIdentity(GeneradorToken.Claims(sesion.Usuario, sid),
                             "Bearer",
                             "name",
@@ -120,7 +140,11 @@ public static class Arranque
         b.Services.AddSwaggerGen(o =>
         {
             o.SwaggerDoc("v1",
-                new() { Title = "SGCP · API comercial", Version = "v1" });
+                new()
+                {
+                    Title = "SGCP · API comercial",
+                    Version = "v1"
+                });
             o.AddSecurityDefinition("Bearer",
                 new OpenApiSecurityScheme
                 {
@@ -133,9 +157,15 @@ public static class Arranque
         var app = b.Build();
         app.UseMiddleware<ErroresMiddleware>();
         if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
-        { app.UseSwagger(); app.UseSwaggerUI(); }
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
         else
-        { app.UseHsts(); app.UseHttpsRedirection(); }
+        {
+            app.UseHsts();
+            app.UseHttpsRedirection();
+        }
         app.UseRateLimiter();
         app.UseAuthentication();
         app.UseAuthorization();
@@ -146,6 +176,9 @@ public static class Arranque
     public static async Task Inicializar(WebApplication app)
     {
         if (app.Configuration.GetValue<bool>("DatosIniciales:Habilitar"))
-        { await using var scope = app.Services.CreateAsyncScope(); await DatosIniciales.Sembrar(scope.ServiceProvider.GetRequiredService<SgcpContext>(), app.Configuration); }
+        {
+            await using var scope = app.Services.CreateAsyncScope();
+            await DatosIniciales.Sembrar(scope.ServiceProvider.GetRequiredService<SgcpContext>(), app.Configuration);
+        }
     }
 }
