@@ -7,4 +7,9 @@
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="PDFsharp" Version="6.2.4" />
+    <EmbeddedResource Include="Recursos/DejaVuSans.ttf" />
+  </ItemGroup>
 </Project>

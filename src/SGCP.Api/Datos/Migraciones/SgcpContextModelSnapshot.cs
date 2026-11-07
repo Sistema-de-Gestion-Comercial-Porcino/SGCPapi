@@ -34,6 +34,140 @@ namespace SGCP.Api.Datos.Migraciones
                     b.ToTable("RolesPermisos");
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Animal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("FechaIngreso")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Identificacion")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<decimal>("PesoIngreso")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<string>("Procedencia")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<string>("Proveedor")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Identificacion")
+                        .IsUnique();
+
+                    b.ToTable("Animales", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.AplicacionPago", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("CargoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("Importe")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<Guid>("PagoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("SenaId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CargoId");
+
+                    b.HasIndex("SenaId")
+                        .IsUnique();
+
+                    b.HasIndex("PagoId", "CargoId")
+                        .IsUnique();
+
+                    b.ToTable("AplicacionesPago", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Cargo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("AcuerdoServicio")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<bool>("Anulado")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Concepto")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<Guid?>("DetallePedidoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("Importe")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("MotivoAnulacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid>("PedidoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("PrestadoEn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DetallePedidoId")
+                        .IsUnique();
+
+                    b.HasIndex("PedidoId");
+
+                    b.ToTable("Cargos", (string)null);
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.ClasificacionProducto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -130,6 +264,188 @@ namespace SGCP.Api.Datos.Migraciones
                         .IsUnique();
 
                     b.ToTable("Clientes", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.ComprobanteFiscal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("NumeroFiscal")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<Guid>("PedidoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ReferenciaUnica")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("RespuestaProveedor")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PedidoId")
+                        .IsUnique();
+
+                    b.HasIndex("ReferenciaUnica")
+                        .IsUnique();
+
+                    b.HasIndex("ResponsableId");
+
+                    b.ToTable("ComprobantesFiscales", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.CondicionPago", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("FechaAcuerdo")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("ImporteAutorizado")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("Modalidad")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<Guid?>("PedidoActivo")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("char(36)")
+                        .HasComputedColumnSql("CASE WHEN `Activa` = 1 THEN `PedidoId` ELSE NULL END", true);
+
+                    b.Property<Guid>("PedidoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("Vencimiento")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PedidoActivo")
+                        .IsUnique();
+
+                    b.HasIndex("PedidoId");
+
+                    b.HasIndex("ResponsableId");
+
+                    b.ToTable("CondicionesPago", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.ControlFrio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("EntregaId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Evaluacion")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("LoteId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Observacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Temperatura")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("Ubicacion")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)");
+
+                    b.Property<string>("Unidad")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("varchar(8)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EntregaId");
+
+                    b.HasIndex("LoteId");
+
+                    b.HasIndex("ResponsableId");
+
+                    b.ToTable("ControlesFrio", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.ControlSanitario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("AnimalId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Observacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Resultado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ResponsableId");
+
+                    b.HasIndex("AnimalId", "Fecha");
+
+                    b.ToTable("ControlesSanitarios", (string)null);
                 });
 
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Cotizacion", b =>
@@ -272,6 +588,499 @@ namespace SGCP.Api.Datos.Migraciones
                     b.ToTable("DetallesPedido", (string)null);
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.EntradaInventario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("Anulada")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("AnuladaEn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("AnuladaPorId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<Guid>("ExistenciaId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("LoteId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("MotivoAnulacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid>("PesajeId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnuladaPorId");
+
+                    b.HasIndex("ExistenciaId");
+
+                    b.HasIndex("PesajeId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("ResponsableId");
+
+                    b.HasIndex("LoteId", "ProductoId")
+                        .IsUnique();
+
+                    b.ToTable("EntradasInventario", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Entrega", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime?>("FechaConfirmacion")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("FechaPrevista")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("FechaReal")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Modalidad")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("ObservacionRecepcion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<int>("OrdenEnRuta")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("PedidoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Receptor")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("RutaId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PedidoId")
+                        .IsUnique();
+
+                    b.HasIndex("RutaId");
+
+                    b.HasIndex("ResponsableId", "Estado");
+
+                    b.ToTable("Entregas", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.EvidenciaRecepcion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<byte[]>("Contenido")
+                        .IsRequired()
+                        .HasColumnType("mediumblob");
+
+                    b.Property<Guid>("RecepcionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecepcionId");
+
+                    b.ToTable("EvidenciasRecepcion", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Existencia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("CantidadFisica")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<Guid>("LoteId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Ubicacion")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("LoteId", "ProductoId")
+                        .IsUnique();
+
+                    b.ToTable("Existencias", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Incidencia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("AnimalId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("LoteId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Resolucion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("Resuelta")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("ResueltaEn")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnimalId");
+
+                    b.HasIndex("LoteId");
+
+                    b.HasIndex("ResponsableId");
+
+                    b.ToTable("Incidencias", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.InsumoProduccion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<Guid>("ExistenciaId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("OrdenProduccionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ReferenciaUnica")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Unidad")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExistenciaId");
+
+                    b.HasIndex("OrdenProduccionId");
+
+                    b.HasIndex("ReferenciaUnica")
+                        .IsUnique();
+
+                    b.HasIndex("ResponsableId");
+
+                    b.ToTable("InsumosProduccion", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Lote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("FechaProduccion")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("OrdenProduccionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Procedencia")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("ReferenciaExterna")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)");
+
+                    b.Property<string>("Unidad")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime>("Vencimiento")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.HasIndex("OrdenProduccionId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("Lotes", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.MovimientoStock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<Guid>("ExistenciaId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid>("ReferenciaId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExistenciaId");
+
+                    b.HasIndex("ResponsableId");
+
+                    b.HasIndex("Tipo", "ReferenciaId")
+                        .IsUnique();
+
+                    b.ToTable("MovimientosStock", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.OrdenProduccion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid?>("AnimalEnOrden")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("char(36)")
+                        .HasComputedColumnSql("CASE WHEN `Estado` <> 'ANULADA' THEN `AnimalId` ELSE NULL END", true);
+
+                    b.Property<Guid?>("AnimalId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("FinPrevisto")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("FinReal")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("InicioPrevisto")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("InicioReal")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Observacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnimalEnOrden")
+                        .IsUnique();
+
+                    b.HasIndex("AnimalId");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.HasIndex("ResponsableId");
+
+                    b.ToTable("OrdenesProduccion", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Pago", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("Anulado")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid>("ClienteId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("Importe")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("Medio")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("MotivoAnulacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("ReferenciaUnica")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReferenciaUnica")
+                        .IsUnique();
+
+                    b.HasIndex("ResponsableId");
+
+                    b.HasIndex("ClienteId", "Fecha");
+
+                    b.ToTable("Pagos", (string)null);
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Pedido", b =>
                 {
                     b.Property<Guid>("Id")
@@ -371,6 +1180,58 @@ namespace SGCP.Api.Datos.Migraciones
                     b.ToTable("Permisos", (string)null);
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Pesaje", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("LoteId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Neto")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<string>("Observacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<decimal>("PesoBruto")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Tara")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<string>("Unidad")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoteId")
+                        .IsUnique();
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("ResponsableId");
+
+                    b.ToTable("Pesajes", (string)null);
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.PrecioProducto", b =>
                 {
                     b.Property<Guid>("Id")
@@ -408,6 +1269,37 @@ namespace SGCP.Api.Datos.Migraciones
                         .IsUnique();
 
                     b.ToTable("PreciosProducto", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.PrevisionProducto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("CantidadEstimada")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<Guid>("OrdenProduccionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Unidad")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductoId");
+
+                    b.HasIndex("OrdenProduccionId", "ProductoId")
+                        .IsUnique();
+
+                    b.ToTable("PrevisionesProducto", (string)null);
                 });
 
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Producto", b =>
@@ -458,6 +1350,104 @@ namespace SGCP.Api.Datos.Migraciones
                         .IsUnique();
 
                     b.ToTable("Productos", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Recepcion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("AutorId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ClaveUnica")
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("Conforme")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<Guid?>("EntregaConfirmada")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("char(36)")
+                        .HasComputedColumnSql("CASE WHEN `Estado` = 'CONFIRMADA' THEN `EntregaId` ELSE NULL END", true);
+
+                    b.Property<Guid>("EntregaId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("FechaReal")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("FechaSincronizacion")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("HuellaContenido")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("MotivoConflicto")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<string>("Observacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<decimal>("PesoRecibido")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<string>("Receptor")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)");
+
+                    b.Property<string>("Resolucion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<DateTime?>("RevisadaEn")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid?>("RevisadaPorId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal?>("SaldoPendienteAlConfirmar")
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
+
+                    b.Property<string>("Unidad")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<int>("VersionBase")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AutorId");
+
+                    b.HasIndex("ClaveUnica")
+                        .IsUnique();
+
+                    b.HasIndex("EntregaConfirmada")
+                        .IsUnique();
+
+                    b.HasIndex("EntregaId");
+
+                    b.HasIndex("RevisadaPorId");
+
+                    b.ToTable("Recepciones", (string)null);
                 });
 
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.RecuperacionAcceso", b =>
@@ -529,6 +1519,96 @@ namespace SGCP.Api.Datos.Migraciones
                     b.ToTable("RegistrosAuditoria", (string)null);
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Reserva", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("Cantidad")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<Guid?>("DetalleActivo")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("char(36)")
+                        .HasComputedColumnSql("CASE WHEN `Estado` = 'ACTIVA' THEN `DetallePedidoId` ELSE NULL END", true);
+
+                    b.Property<Guid>("DetallePedidoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<Guid>("ExistenciaId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("MotivoLiberacion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DetallePedidoId");
+
+                    b.HasIndex("ExistenciaId");
+
+                    b.HasIndex("ResponsableId");
+
+                    b.HasIndex("DetalleActivo", "ExistenciaId")
+                        .IsUnique();
+
+                    b.ToTable("Reservas", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.ResultadoProduccion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal?>("CantidadReal")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("LoteId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("OrdenProduccionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("ProductoId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LoteId")
+                        .IsUnique();
+
+                    b.HasIndex("OrdenProduccionId");
+
+                    b.HasIndex("ProductoId");
+
+                    b.ToTable("ResultadosProduccion", (string)null);
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Rol", b =>
                 {
                     b.Property<Guid>("Id")
@@ -556,6 +1636,84 @@ namespace SGCP.Api.Datos.Migraciones
                     b.ToTable("Roles", (string)null);
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Ruta", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("ResponsableId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("RetornoReal")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("SalidaReal")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("TransporteId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("Zona")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.HasIndex("ResponsableId");
+
+                    b.HasIndex("TransporteId");
+
+                    b.ToTable("Rutas", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Sena", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("AcuerdoResolucion")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
+                    b.Property<Guid>("PagoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("PedidoId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime?>("ResueltaEn")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PagoId")
+                        .IsUnique();
+
+                    b.HasIndex("PedidoId");
+
+                    b.ToTable("Senas", (string)null);
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Sesion", b =>
                 {
                     b.Property<Guid>("Id")
@@ -579,6 +1737,58 @@ namespace SGCP.Api.Datos.Migraciones
                     b.HasIndex("UsuarioId", "Revocada");
 
                     b.ToTable("Sesiones", (string)null);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Transporte", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("Conservacion")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<string>("Contacto")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<string>("DescripcionVehiculo")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<string>("Modalidad")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("Placa")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<string>("Transportista")
+                        .IsRequired()
+                        .HasMaxLength(180)
+                        .HasColumnType("varchar(180)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique();
+
+                    b.ToTable("Transportes", (string)null);
                 });
 
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Usuario", b =>
@@ -671,6 +1881,104 @@ namespace SGCP.Api.Datos.Migraciones
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.AplicacionPago", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Cargo", null)
+                        .WithMany()
+                        .HasForeignKey("CargoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Pago", null)
+                        .WithMany()
+                        .HasForeignKey("PagoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Sena", null)
+                        .WithMany()
+                        .HasForeignKey("SenaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Cargo", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.DetallePedido", null)
+                        .WithMany()
+                        .HasForeignKey("DetallePedidoId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Pedido", null)
+                        .WithMany()
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.ComprobanteFiscal", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Pedido", null)
+                        .WithMany()
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.CondicionPago", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Pedido", null)
+                        .WithMany()
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.ControlFrio", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Entrega", null)
+                        .WithMany()
+                        .HasForeignKey("EntregaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Lote", null)
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.ControlSanitario", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Animal", null)
+                        .WithMany()
+                        .HasForeignKey("AnimalId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Cotizacion", b =>
                 {
                     b.HasOne("SGCP.Api.Dominio.Entidades.Cliente", "Cliente")
@@ -727,6 +2035,186 @@ namespace SGCP.Api.Datos.Migraciones
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.EntradaInventario", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AnuladaPorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Existencia", null)
+                        .WithMany()
+                        .HasForeignKey("ExistenciaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Lote", null)
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Pesaje", null)
+                        .WithMany()
+                        .HasForeignKey("PesajeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Producto", null)
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Entrega", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Pedido", null)
+                        .WithMany()
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Ruta", null)
+                        .WithMany()
+                        .HasForeignKey("RutaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.EvidenciaRecepcion", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Recepcion", null)
+                        .WithMany()
+                        .HasForeignKey("RecepcionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Existencia", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Lote", null)
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Producto", null)
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Incidencia", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Animal", null)
+                        .WithMany()
+                        .HasForeignKey("AnimalId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Lote", null)
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.InsumoProduccion", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Existencia", null)
+                        .WithMany()
+                        .HasForeignKey("ExistenciaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.OrdenProduccion", null)
+                        .WithMany()
+                        .HasForeignKey("OrdenProduccionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Lote", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.OrdenProduccion", null)
+                        .WithMany()
+                        .HasForeignKey("OrdenProduccionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Producto", null)
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.MovimientoStock", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Existencia", null)
+                        .WithMany()
+                        .HasForeignKey("ExistenciaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.OrdenProduccion", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Animal", null)
+                        .WithMany()
+                        .HasForeignKey("AnimalId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Pago", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Cliente", null)
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Pedido", b =>
                 {
                     b.HasOne("SGCP.Api.Dominio.Entidades.Cliente", "Cliente")
@@ -746,6 +2234,27 @@ namespace SGCP.Api.Datos.Migraciones
                     b.Navigation("Cotizacion");
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Pesaje", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Lote", null)
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Producto", null)
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.PrecioProducto", b =>
                 {
                     b.HasOne("SGCP.Api.Dominio.Entidades.Producto", "Producto")
@@ -757,6 +2266,21 @@ namespace SGCP.Api.Datos.Migraciones
                     b.Navigation("Producto");
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.PrevisionProducto", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.OrdenProduccion", null)
+                        .WithMany()
+                        .HasForeignKey("OrdenProduccionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Producto", null)
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Producto", b =>
                 {
                     b.HasOne("SGCP.Api.Dominio.Entidades.ClasificacionProducto", "ClasificacionProducto")
@@ -766,6 +2290,26 @@ namespace SGCP.Api.Datos.Migraciones
                         .IsRequired();
 
                     b.Navigation("ClasificacionProducto");
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Recepcion", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("AutorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Entrega", null)
+                        .WithMany()
+                        .HasForeignKey("EntregaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("RevisadaPorId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.RecuperacionAcceso", b =>
@@ -788,6 +2332,78 @@ namespace SGCP.Api.Datos.Migraciones
                         .IsRequired();
 
                     b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Reserva", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.DetallePedido", null)
+                        .WithMany()
+                        .HasForeignKey("DetallePedidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Existencia", null)
+                        .WithMany()
+                        .HasForeignKey("ExistenciaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.ResultadoProduccion", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Lote", null)
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.OrdenProduccion", null)
+                        .WithMany()
+                        .HasForeignKey("OrdenProduccionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Producto", null)
+                        .WithMany()
+                        .HasForeignKey("ProductoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Ruta", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ResponsableId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Transporte", null)
+                        .WithMany()
+                        .HasForeignKey("TransporteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Sena", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Pago", null)
+                        .WithMany()
+                        .HasForeignKey("PagoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SGCP.Api.Dominio.Entidades.Pedido", null)
+                        .WithMany()
+                        .HasForeignKey("PedidoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Sesion", b =>

@@ -1,7 +1,7 @@
-name: Sprint 1 · MySQL
+name: API Sprints 1–4 · MySQL
 on:
   push:
-    branches: [main, sprint1-implementacion]
+    branches: [main, 'trabajo/**', 'sprint*/**']
   pull_request:
   workflow_dispatch:
 permissions:
@@ -36,14 +36,18 @@ jobs:
         run: |
           dotnet tool restore
           dotnet ef migrations has-pending-model-changes --project src/SGCP.Api --configuration Release --no-build
-          dotnet ef migrations script --project src/SGCP.Api --configuration Release --no-build --output artifacts/InicialSprint1.sql
-      - name: Aplicar migración y probar API en MySQL
-        run: dotnet run --project tests/SGCP.Verificacion --configuration Release --no-build
+          dotnet ef migrations script --project src/SGCP.Api --configuration Release --no-build --output artifacts/EsquemaCompleto.sql
+      - name: Aplicar migraciones y probar API en MySQL (es-BO y cultura invariante)
+        shell: bash
+        run: |
+          sudo locale-gen es_BO.UTF-8
+          LANG=es_BO.UTF-8 LC_ALL=es_BO.UTF-8 dotnet run --project tests/SGCP.Verificacion --configuration Release --no-build
+          LANG=C LC_ALL=C dotnet run --project tests/SGCP.Verificacion --configuration Release --no-build
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: migracion-mysql-sprint1
-          path: artifacts/InicialSprint1.sql
+          name: migracion-mysql-sprints1-4
+          path: artifacts/EsquemaCompleto.sql
       - name: Detener instancia temporal
         if: always()
         run: docker rm -f sgcp-mysql

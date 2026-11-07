@@ -50,7 +50,7 @@ public class PedidosController(SgcpContext db, ServicioConfirmarPedido servicio,
             .ThenInclude(x => x.Producto)
             .SingleOrDefaultAsync(x => x.Id == id) ?? throw new ReglaException("NO_ENCONTRADO", "Pedido no encontrado.", 404);
         actor.VerCliente(p.ClienteId);
-        var costos = actor.Tiene("costos.consultar");
+        var costos = actor.Tiene("costos.consultar") && !actor.Comprador;
         return Ok(new
         {
             p.Id,
@@ -86,10 +86,16 @@ public class PedidosController(SgcpContext db, ServicioConfirmarPedido servicio,
     [HttpPost,
             Authorize(Policy = "pedidos.administrar")]
     public async Task<IActionResult> Confirmar(PedidoPeticion p) => StatusCode(201,
-            new { Id = await servicio.ConfirmarAsync(p) });
+            new
+            {
+                Id = await servicio.ConfirmarAsync(p)
+            });
     [HttpPost("{id:guid}/cancelar"),
             Authorize(Policy = "pedidos.administrar")]
     public async Task<IActionResult> Cancelar(Guid id,
             MotivoPeticion p)
-    { await servicio.Cancelar(id, p.Motivo); return NoContent(); }
+    {
+        await servicio.Cancelar(id, p.Motivo);
+        return NoContent();
+    }
 }
