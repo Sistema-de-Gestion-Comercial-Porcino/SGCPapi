@@ -79,6 +79,14 @@ Sin `SGCP_MYSQL_TEST`, las pruebas usan SQLite en un archivo temporal solo para 
 
 Para verificar con MySQL, configura `SGCP_MYSQL_TEST` con una conexión de pruebas o ejecuta `scripts/Verificar-MySql.ps1`. El verificador crea una base `sgcp_pruebas_<uuid>`, aplica la migración dos veces, comprueba que no queden migraciones pendientes, ejecuta el recorrido HTTP y elimina únicamente esa base aislada al terminar. El usuario necesita CREATE DATABASE; concedelo acotado al prefijo con ``GRANT ALL ON `sgcp%`.* TO 'sgcp'@'%';`` en lugar de dar permiso sobre todo el servidor.
 
+Aparte de esa verificación completa hay una corta, `scripts/Verificar-Sprint1.py`, que recorre por HTTP el criterio de aceptación del Sprint 1 contra una API **ya levantada**: que el pedido se niegue si la cotización no está aceptada, que el pedido confirmado guarde costo Bs 112,00 y margen Bs 28,00, y que una vigencia de precio posterior no recalcule ese margen. Sirve para comprobar en segundos la base que se va a mostrar en una demostración; no reemplaza a `tests/SGCP.Verificacion`, que aplica las migraciones en una base aislada y cubre los cuatro sprints.
+
+```bash
+SGCP_CLAVE_ADMIN='la-clave-del-administrador' python3 scripts/Verificar-Sprint1.py
+```
+
+Necesita Python 3.8 o posterior y no usa paquetes externos. La dirección se cambia con `SGCP_API` y el usuario con `SGCP_USUARIO`. Deja en la base los registros que crea, con códigos marcados con la hora para no chocar con los índices únicos.
+
 El flujo `.github/workflows/sprint1-mysql.yml` ejecuta esa verificación con un MySQL 8.4 temporal en GitHub Actions. Su presencia no significa que se haya ejecutado: comprueba el resultado de la ejecución en GitHub antes de afirmar que pasó.
 
 ## Seguridad y reglas
