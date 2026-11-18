@@ -173,13 +173,26 @@ Todas bajo `/api/v1`, JSON y autenticación Bearer salvo acceso/registro/recuper
 |---|---|
 | Acceso | `POST auth/login`, `auth/registro-comprador`, `auth/recuperar`, `auth/restablecer`, `auth/cerrar-sesion`; `GET auth/yo` |
 | Usuarios | `GET/POST usuarios`, `GET/PUT usuarios/{id}`, `POST usuarios/{id}/estado`; `GET roles`, `permisos`, `auditoria` |
-| Clientes | `GET/POST clientes`, `GET/PUT clientes/{id}`, `POST clientes/{id}/activar`, `desactivar` |
+| Clientes | `GET/POST clientes`, `GET/PUT/DELETE clientes/{id}`, `GET clientes/{id}/pedidos`, `POST clientes/{id}/activar`, `desactivar` |
 | Clasificaciones | `GET/POST clasificaciones`, `GET/PUT clasificaciones/{id}`, `POST clasificaciones/{id}/estado` |
 | Productos | `GET/POST productos`, `GET/PUT productos/{id}`, `POST productos/{id}/estado` |
 | Costos | `GET/POST productos/{id}/precios`, `PUT precios/{id}`, `POST precios/{id}/finalizar` |
 | Cotizaciones | `GET/POST cotizaciones`, `GET/PUT cotizaciones/{id}`, `POST .../presentar`, `aceptar`, `rechazar`, `nueva-version` |
 | Pedidos | `GET/POST pedidos`, `GET pedidos/{id}`, `POST pedidos/{id}/cancelar` |
 | Resumen | `GET resumen`, filtrado según permisos |
+
+**Clientes como recurso REST (Web III).** Responde con el DTO `ClienteRespuesta`, nunca con la entidad de EF Core. Pedidos es su recurso relacionado.
+
+| Operación | Éxito | Errores |
+|---|---|---|
+| `GET clientes` | 200, paginado | 400 si la paginación es inválida |
+| `GET clientes/{id}` | 200 | 404 `NO_ENCONTRADO` |
+| `POST clientes` | **201 con cabecera `Location`** a `clientes/{id}` | 400 si faltan campos obligatorios; 409 `CLIENTE_DUPLICADO` |
+| `PUT clientes/{id}` | 200 | 400, 404, 409 |
+| `DELETE clientes/{id}` | 204, con registro `ELIMINAR_CLIENTE` en la auditoría | 404; **409 `CLIENTE_CON_HISTORIAL`** si tiene cotizaciones, pedidos, pagos o cuenta de comprador (se desactiva en lugar de borrarse, para no romper la trazabilidad de saldos) |
+| `GET clientes/{id}/pedidos` | 200, paginado: código, fecha, estado comercial y total | 404 si el cliente no existe; 403 si un comprador pide los de otro cliente |
+
+`POST productos` y `POST cotizaciones` también responden 201 con `Location`.
 
 Swagger documenta cuerpos y enumeraciones. Los listados aceptan `pagina`, `tamanoPagina` (10/20/50/100), `busqueda` y filtros de módulo. Los errores contienen `codigo`, `mensaje` y `detalles`.
 
@@ -221,6 +234,7 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v4.2.0 | 2026-11-18 | 4 | Web III (W3-P2): Clientes como recurso REST. DTO de salida `ClienteRespuesta`; `POST` con 201 y `Location` en clientes, productos y cotizaciones; `DELETE clientes/{id}` con la regla `CLIENTE_CON_HISTORIAL` (409) y auditoría; `GET clientes/{id}/pedidos` con aislamiento del comprador; `ProducesResponseType` y comentarios en `ClientesController`; 20 comprobaciones nuevas en el verificador | Angel Sebastian Eguez Mur |
 | v4.1.2 | 2026-11-18 | 4 | SQL Server como segundo motor, elegible con `BaseDatos:Proveedor`: `SgcpContextSqlServer` con migración propia (`Datos/MigracionesSqlServer`) y script `database/EsquemaSqlServer.sql`; manejo de interbloqueos de SQL Server; verificador con `SGCP_SQLSERVER_TEST` y flujo de CI con SQL Server 2022. MySQL sigue siendo el motor por defecto y no cambia | Dario Haziel Tambo Parra |
 | v4.1.1 | 2026-11-18 | 4 | Corrección pedida por la web (S3/S4-P2): `GET recepciones/conflictos` y `GET recepciones/{id}` devuelven la versión y el estado actuales de la entrega, para que Ventas revise conflictos sin `entregas.administrar`; el reporte ENTREGAS trae la columna «Entrega» con el id, y `GET pedidos/{pedidoId}/constancia` emite la constancia a Ventas y al comprador conociendo solo el pedido | Dario Haziel Tambo Parra |
 | v4.1.0 | 2026-11-07 | 2, 3 y 4 | Parte de API de los tres sprints (S2-P1, S3-P1, S4-P1): producción, sanidad, lotes, pesajes, inventario, reservas y frío; pagos, señas, saldos, transportes, entregas y sincronización con evidencias; reportes por perfil con exportación PDF y Excel, constancia y Adapter fiscal sin proveedor. Patrones Factory Method, Strategy, Facade y Adapter | Dario Haziel Tambo Parra |

@@ -283,7 +283,10 @@ try
     Comprobar((await Llamar("GET", "auth/yo")).Estado == 401, "Cerrar sesión invalida el token");
     Console.WriteLine($"RESULTADO: {cuenta} comprobaciones correctas.");
     if (cadena is not null && !args.Contains("--solo-sprint1"))
+    {
         await Sprints234.Ejecutar(http, app);
+        await ClientesRest.Ejecutar(http);
+    }
 }
 finally
 {

@@ -67,8 +67,12 @@ public class ProductosController(SgcpContext db, ServicioCatalogo servicio, Acto
             404));
     [HttpPost,
             Authorize(Policy = "catalogo.administrar")]
-    public async Task<IActionResult> Crear(ProductoPeticion p) => StatusCode(201,
-            await servicio.Producto(null, p));
+    public async Task<IActionResult> Crear(ProductoPeticion p)
+    {
+        var producto = await servicio.Producto(null, p);
+        // 201 con Location: GET productos/{id}.
+        return CreatedAtAction(nameof(Ver), new { id = producto.Id }, producto);
+    }
     [HttpPut("{id:guid}"),
             Authorize(Policy = "catalogo.administrar")]
     public async Task<IActionResult> Editar(Guid id,
