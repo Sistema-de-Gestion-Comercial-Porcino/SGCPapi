@@ -80,6 +80,7 @@ public static class Sprints234
         var almacen = await Cuenta("ALMACEN", "almacen.test");
         var reparto = await Cuenta("ENTREGA", "reparto.test");
         var otroReparto = await Cuenta("ENTREGA", "otro.reparto");
+        var ventas = await Cuenta("VENTAS", "ventas.test");
         var productos = (await Ok("GET", "productos"))["elementos"]!.AsArray();
         var costilla = Id(productos.Single(x => x!["codigo"]!.ToString() == "PRD-001")!);
         var lomo = Id(productos.Single(x => x!["codigo"]!.ToString() == "PRD-002")!);
@@ -479,12 +480,22 @@ public static class Sprints234
         var entregas = (await Ok("GET", "entregas"))["elementos"]!.AsArray();
         Check(entregas.Single(x => Id(x!) == entrega)!["estado"]!.ToString() == "ENTREGADA", "Recepción conforme cambia estado a ENTREGADA");
         Check(entregas.Single(x => Id(x!) == entrega2)!["estado"]!.ToString() == "DESPACHADA", "Conflicto no sobrescribe estado del servidor");
+        Token(ventas.Token);
+        Check((await Call("GET", "entregas")).Estado == 403, "Ventas no administra entregas");
+        var enConflicto = (await Ok("GET", "recepciones/conflictos"))["elementos"]!.AsArray().Single(x => Id(x!) == conflictoId)!;
+        Check(enConflicto["versionEntrega"]!.GetValue<int>() == 2 && enConflicto["estadoEntrega"]!.ToString() == "DESPACHADA" && enConflicto["pedido"] is not null,
+            "Ventas lee en la bandeja de conflictos la versión y el estado actuales de la entrega");
+        var detalleConflicto = await Ok("GET", "recepciones/" + conflictoId);
+        var versionEntrega = detalleConflicto["entrega"]!["version"]!.GetValue<int>();
+        Check(versionEntrega == 2 && Id(detalleConflicto["entrega"]!) == entrega2, "Ventas lee la versión de la entrega en el detalle de la recepción");
         await Ok("POST", "recepciones/" + conflictoId + "/revisar", new
         {
             aplicar = true,
-            versionActual = 2,
+            versionActual = versionEntrega,
             motivo = "Revisado con el responsable"
         });
+        Check(!(await Ok("GET", "recepciones/conflictos"))["elementos"]!.AsArray().Any(x => Id(x!) == conflictoId), "Ventas resuelve el conflicto con la versión leída de la API");
+        Token(token);
         Check(await Error("RECEPCION_OBSERVADA", "GET", "entregas/" + entrega2 + "/constancia"), "Observada no emite constancia definitiva");
         Check((await Ok("GET", "saldos?pedidoId=" + pedido))["total"]!.GetValue<decimal>() == 60.25m, "Entrega confirmada mantiene deuda independiente");
         using (var pdf = await http.GetAsync("entregas/" + entrega + "/constancia"))
@@ -498,6 +509,23 @@ public static class Sprints234
                 await File.WriteAllBytesAsync(Path.Combine(carpeta, "Constancia.pdf"), bytes);
             }
         }
+        Token(ventas.Token);
+        var reporteEntregas = await Ok("GET", "reportes/ENTREGAS");
+        var columnasEntregas = reporteEntregas["columnas"]!.AsArray().Select(x => x!.ToString()).ToList();
+        var colEntrega = columnasEntregas.IndexOf("Entrega");
+        Check(colEntrega >= 0 && reporteEntregas["filas"]!.AsArray().Any(f => f![colEntrega]!.ToString() == entrega),
+            "Reporte ENTREGAS trae el id de la entrega para pedir la constancia");
+        using (var porPedido = await http.GetAsync("pedidos/" + pedido + "/constancia"))
+            Check(porPedido.IsSuccessStatusCode && (await porPedido.Content.ReadAsByteArrayAsync()).AsSpan(0, 4).SequenceEqual("%PDF"u8), "Ventas obtiene la constancia por pedido");
+        Check(await Error("RECEPCION_PENDIENTE", "GET", "pedidos/" + pedidoAjeno + "/constancia"), "Pedido sin entrega confirmada no emite constancia");
+        Check(await Error("NO_ENCONTRADO", "GET", "pedidos/" + Guid.NewGuid() + "/constancia"), "Constancia de pedido inexistente responde 404");
+        Token(compradorToken);
+        using (var propia = await http.GetAsync("pedidos/" + pedido + "/constancia"))
+            Check(propia.IsSuccessStatusCode, "Comprador obtiene la constancia de su pedido sin conocer el id de la entrega");
+        Check((await Call("GET", "pedidos/" + pedidoAjeno + "/constancia")).Estado == 403, "Comprador no obtiene constancia de pedido ajeno");
+        Token(reparto.Token);
+        Check((await Call("GET", "pedidos/" + pedido + "/constancia")).Estado == 403, "Reparto no obtiene la constancia con saldo por pedido");
+        Token(token);
         var fiscal = await Ok("POST", "pedidos/" + pedido + "/registro-fiscal");
         var fiscal2 = await Ok("POST", "pedidos/" + pedido + "/registro-fiscal");
         Check(fiscal["estado"]!.ToString() == "SIN_PROVEEDOR" && Id(fiscal) == Id(fiscal2), "Adapter registra sin comprobante y conserva referencia única");
