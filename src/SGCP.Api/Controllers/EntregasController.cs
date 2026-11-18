@@ -102,8 +102,37 @@ public class RecepcionesController(SgcpContext db, ServicioEntregas servicio, SG
     public async Task<IActionResult> Sincronizar(SincronizarPeticion p) => Ok(new { Resultados = await servicio.Sincronizar(p) });
     [HttpGet("conflictos"), Authorize(Policy = "entregas.revisar")]
     public async Task<IActionResult> Conflictos(int pagina = 1, int tamanoPagina = 20) =>
-        Ok(await db.Recepciones.AsNoTracking().Where(x => x.Estado == EstadoRecepcion.CONFLICTO)
-            .OrderBy(x => x.FechaSincronizacion).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
+        Ok(await (from r in db.Recepciones.AsNoTracking()
+                  join e in db.Entregas on r.EntregaId equals e.Id
+                  join p in db.Pedidos on e.PedidoId equals p.Id
+                  where r.Estado == EstadoRecepcion.CONFLICTO
+                  orderby r.FechaSincronizacion, r.Id
+                  // Versión y estado actuales de la entrega: Ventas los necesita para revisar (VersionActual)
+                  // sin tener entregas.administrar.
+                  select new
+                  {
+                      r.Id,
+                      r.EntregaId,
+                      r.ClaveUnica,
+                      r.VersionBase,
+                      r.AutorId,
+                      r.FechaReal,
+                      r.FechaSincronizacion,
+                      r.PesoRecibido,
+                      r.Unidad,
+                      r.Conforme,
+                      r.Receptor,
+                      r.Observacion,
+                      r.Estado,
+                      r.MotivoConflicto,
+                      r.RevisadaPorId,
+                      r.RevisadaEn,
+                      r.Resolucion,
+                      VersionEntrega = e.Version,
+                      EstadoEntrega = e.Estado,
+                      e.PedidoId,
+                      Pedido = p.Codigo
+                  }).Paginar(pagina, tamanoPagina));
     [HttpPost("{id:guid}/revisar"), Authorize(Policy = "entregas.revisar")]
     public async Task<IActionResult> Revisar(Guid id, RevisarRecepcionPeticion p)
     {
@@ -113,7 +142,7 @@ public class RecepcionesController(SgcpContext db, ServicioEntregas servicio, SG
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Ver(Guid id)
     {
-        var r = await Acceso(id);
+        var (r, e) = await Acceso(id);
         var evidencias = await db.EvidenciasRecepcion.AsNoTracking().Where(x => x.RecepcionId == id)
             .Select(x => new { x.Id, x.Tipo, x.Sha256 }).ToListAsync();
         return Ok(new
@@ -138,6 +167,13 @@ public class RecepcionesController(SgcpContext db, ServicioEntregas servicio, SG
                 r.RevisadaEn,
                 r.Resolucion
             },
+            Entrega = new
+            {
+                e.Id,
+                e.Version,
+                e.Estado,
+                e.PedidoId
+            },
             Evidencias = evidencias
         });
     }
@@ -150,7 +186,7 @@ public class RecepcionesController(SgcpContext db, ServicioEntregas servicio, SG
         Response.Headers["Cache-Control"] = "no-store";
         return File(e.Contenido, e.Tipo, e.Id + (e.Tipo == "image/png" ? ".png" : ".jpg"));
     }
-    private async Task<Recepcion> Acceso(Guid id)
+    private async Task<(Recepcion Recepcion, Entrega Entrega)> Acceso(Guid id)
     {
         var r = await db.Recepciones.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id)
             ?? throw new ReglaException("NO_ENCONTRADO", "Recepción no encontrada.", 404);
@@ -162,6 +198,6 @@ public class RecepcionesController(SgcpContext db, ServicioEntregas servicio, SG
         }
         else if (!actor.Tiene("entregas.revisar") && e.ResponsableId != actor.Id && r.AutorId != actor.Id)
             throw new ReglaException("SIN_PERMISO", "No tienes acceso a esta recepción.", 403);
-        return r;
+        return (r, e);
     }
 }

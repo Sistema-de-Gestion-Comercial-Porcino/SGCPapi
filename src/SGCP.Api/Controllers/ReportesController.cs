@@ -35,10 +35,28 @@ public class ReportesController(ReportesFacade facade, ExportadorReportes export
 public class ConstanciasController(SgcpContext db, ActorActual actor, ExportadorReportes exportador) : ControllerBase
 {
     [HttpGet("entregas/{id:guid}/constancia")]
-    public async Task<IActionResult> Constancia(Guid id)
+    public async Task<IActionResult> Constancia(Guid id) => await Emitir(await db.Entregas.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id)
+        ?? throw new ReglaException("NO_ENCONTRADO", "Entrega no encontrada.", 404));
+
+    // Para quien solo conoce el pedido (Ventas, comprador): toma la entrega ENTREGADA más reciente del pedido.
+    [HttpGet("pedidos/{pedidoId:guid}/constancia")]
+    public async Task<IActionResult> ConstanciaPorPedido(Guid pedidoId)
     {
-        var entrega = await db.Entregas.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id)
-            ?? throw new ReglaException("NO_ENCONTRADO", "Entrega no encontrada.", 404);
+        if (!actor.Comprador && !actor.Tiene("saldos.consultar"))
+            throw new ReglaException("SIN_PERMISO", "No tienes acceso a esta constancia.", 403);
+        var clienteId = await db.Pedidos.AsNoTracking().Where(x => x.Id == pedidoId).Select(x => (Guid?)x.ClienteId).SingleOrDefaultAsync()
+            ?? throw new ReglaException("NO_ENCONTRADO", "Pedido no encontrado.", 404);
+        if (actor.Comprador)
+            actor.VerCliente(clienteId);
+        var entrega = await db.Entregas.AsNoTracking().Where(x => x.PedidoId == pedidoId && x.Estado == EstadoEntrega.ENTREGADA)
+            .OrderByDescending(x => x.FechaReal).ThenBy(x => x.Id).FirstOrDefaultAsync()
+            ?? throw new ReglaException("RECEPCION_PENDIENTE", "El pedido todavía no tiene una entrega confirmada.");
+        return await Emitir(entrega);
+    }
+
+    private async Task<IActionResult> Emitir(SGCP.Api.Dominio.Entidades.Entrega entrega)
+    {
+        var id = entrega.Id;
         var pedido = await db.Pedidos.AsNoTracking().Include(x => x.Cliente).SingleAsync(x => x.Id == entrega.PedidoId);
         if (actor.Comprador)
             actor.VerCliente(pedido.ClienteId);

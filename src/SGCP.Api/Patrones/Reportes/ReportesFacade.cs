@@ -199,6 +199,7 @@ public class ReportesFacade(SgcpContext db, ActorActual actor)
                                        orderby e.FechaPrevista, e.Id
                                        select new
                                        {
+                                           Entrega = e.Id,
                                            Pedido = p.Codigo,
                                            Cliente = c.Nombre,
                                            e.FechaPrevista,
@@ -206,8 +207,9 @@ public class ReportesFacade(SgcpContext db, ActorActual actor)
                                            e.Estado,
                                            e.Receptor
                                        }).Take(10001).ToListAsync();
-                    tabla = new("Entregas", ["Pedido", "Cliente", "Fecha prevista UTC", "Fecha real UTC", "Estado", "Receptor"],
-                        filas.Select(x => new object?[] { x.Pedido, x.Cliente, x.FechaPrevista, x.FechaReal, x.Estado.ToString(), x.Receptor }).ToList());
+                    // La columna Entrega lleva el id para pedir la constancia (GET entregas/{id}/constancia).
+                    tabla = new("Entregas", ["Pedido", "Cliente", "Fecha prevista UTC", "Fecha real UTC", "Estado", "Receptor", "Entrega"],
+                        filas.Select(x => new object?[] { x.Pedido, x.Cliente, x.FechaPrevista, x.FechaReal, x.Estado.ToString(), x.Receptor, x.Entrega }).ToList());
                     break;
                 }
             default:
