@@ -54,13 +54,70 @@ MySQL no tiene autenticación integrada de Windows: siempre hay usuario y contra
 Si el usuario SQL no puede crear bases, crea previamente `sgcp`; la migración construye las tablas. En PowerShell 7, `./scripts/Preparar-Desarrollo.ps1` pide los valores sin mostrarlos, guarda secretos y ejecuta la migración. Si usas Visual Studio/PowerShell anterior, configura las claves con el administrador de secretos del proyecto.
 
 ```bash
-dotnet ef database update --project src/SGCP.Api
+dotnet ef database update --project src/SGCP.Api --context SgcpContext
 dotnet run --project src/SGCP.Api
 ```
 
 La primera ejecución siembra permisos, responsabilidades y la cuenta `admin` con la contraseña configurada. La operación es idempotente y no sobrescribe cuentas existentes. La migración crea el esquema; el sembrado de datos se ejecuta al arrancar la API. No se cargan precios, clientes, cotizaciones ni pedidos ficticios.
 
 API local: `http://localhost:5081/api/v1/`. Swagger: `http://localhost:5081/swagger`. Para acceso desde otro equipo, configura la escucha en la IP de red y permite solo la red del equipo en el firewall. Los clientes deben usar esa dirección en lugar de `localhost`.
+
+## Usar SQL Server en lugar de MySQL
+
+La API funciona con **MySQL 8** (valor por defecto) o con **SQL Server 2019 o posterior**, incluido LocalDB y Express. El motor se elige con `BaseDatos:Proveedor`, y cada motor tiene su propia migración:
+
+| Motor | `BaseDatos:Proveedor` | Contexto de EF Core | Migraciones |
+|---|---|---|---|
+| MySQL 8 | `MySql` (o vacío) | `SgcpContext` | `src/SGCP.Api/Datos/Migraciones/` |
+| SQL Server | `SqlServer` | `SgcpContextSqlServer` | `src/SGCP.Api/Datos/MigracionesSqlServer/` |
+
+**Como hay dos contextos, todo comando `dotnet ef` lleva `--context`:** `SgcpContext` para MySQL y `SgcpContextSqlServer` para SQL Server. Sin él, EF responde «More than one DbContext was found».
+
+El modelo es el mismo. Solo cambian tres cosas:
+
+- Las columnas calculadas usan `[Columna]` en lugar de `` `Columna` ``.
+- El contenido de las evidencias va en `varbinary(max)` en lugar de `mediumblob`.
+- La unicidad condicional cambia de forma. MySQL usa un índice único sobre una columna calculada `CASE WHEN condición THEN Columna END`. SQL Server no permite filtrar por una columna calculada, así que ahí es un índice único filtrado sobre la columna real, `... WHERE condición`. Por ejemplo, una sola recepción CONFIRMADA por entrega: `UNIQUE (EntregaId) WHERE [Estado] = 'CONFIRMADA'`.
+
+**1. Configurar la conexión local** con user-secrets, sin dejar credenciales en el repositorio. Las cadenas son ejemplos, no credenciales reales:
+
+```bash
+dotnet user-secrets set "BaseDatos:Proveedor" "SqlServer" --project src/SGCP.Api
+# Windows, autenticación integrada (LocalDB o instancia local):
+dotnet user-secrets set "ConnectionStrings:Sgcp" "Server=(localdb)\MSSQLLocalDB;Database=sgcp;Trusted_Connection=True;TrustServerCertificate=True" --project src/SGCP.Api
+# O con usuario SQL (Linux, Docker o servidor remoto):
+dotnet user-secrets set "ConnectionStrings:Sgcp" "Server=localhost,1433;Database=sgcp;User ID=sgcp_app;Password=CAMBIAR_CLAVE;TrustServerCertificate=True" --project src/SGCP.Api
+dotnet user-secrets set "Jwt:Clave" "<clave de al menos 32 bytes en Base64>" --project src/SGCP.Api
+dotnet user-secrets set "DatosIniciales:ClaveAdministrador" "<contraseña inicial de admin>" --project src/SGCP.Api
+```
+
+**2. Aplicar las migraciones**. Se indica `--context SgcpContextSqlServer`, porque si no EF usa el contexto de MySQL:
+
+```bash
+dotnet tool restore
+dotnet ef database update --project src/SGCP.Api --context SgcpContextSqlServer
+```
+
+También se puede aplicar `database/EsquemaSqlServer.sql`, que es idempotente, desde SSMS o `sqlcmd`.
+
+**3. Cargar los datos de prueba**. Con `DatosIniciales:Ejemplos = true`, el primer arranque siembra los permisos, los roles, la cuenta `admin` y el catálogo de ejemplo. La carga es idempotente: no duplica registros ni sobrescribe cuentas existentes.
+
+```bash
+dotnet user-secrets set "DatosIniciales:Ejemplos" "true" --project src/SGCP.Api
+dotnet run --project src/SGCP.Api
+```
+
+**4. Abrir Swagger** en `http://localhost:5081/swagger`. Pulsa **Authorize**, pega el token que devuelve `POST /api/v1/auth/login` y prueba los endpoints. Si detienes la API y la vuelves a arrancar, los datos siguen en SQL Server. Un `GET` posterior lo demuestra.
+
+**Volver a MySQL:** `dotnet user-secrets remove "BaseDatos:Proveedor" --project src/SGCP.Api` y restaura la cadena de MySQL.
+
+**Comprobación:** el flujo `.github/workflows/sqlserver.yml` levanta SQL Server 2022, revisa que no haya cambios de modelo sin migrar, aplica la migración dos veces y ejecuta el verificador completo con `SGCP_SQLSERVER_TEST`. Para correrlo en tu equipo:
+
+```bash
+SGCP_SQLSERVER_TEST="Server=localhost,1433;User ID=sa;Password=CAMBIAR_CLAVE;TrustServerCertificate=True" dotnet run --project tests/SGCP.Verificacion
+```
+
+El verificador crea una base `sgcp_pruebas_<uuid>` y la elimina al terminar.
 
 ## Migraciones y pruebas
 
@@ -70,8 +127,8 @@ No uses `--idempotent` con MySQL: EF genera `IF NOT EXISTS(...) BEGIN ... END`, 
 
 ```bash
 dotnet build --warnaserror
-dotnet ef migrations has-pending-model-changes --project src/SGCP.Api
-dotnet ef migrations script --project src/SGCP.Api --output artifacts/EsquemaCompleto.sql
+dotnet ef migrations has-pending-model-changes --project src/SGCP.Api --context SgcpContext
+dotnet ef migrations script --project src/SGCP.Api --context SgcpContext --output artifacts/EsquemaCompleto.sql
 dotnet run --project tests/SGCP.Verificacion
 ```
 
@@ -164,6 +221,7 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v4.1.2 | 2026-11-18 | 4 | SQL Server como segundo motor, elegible con `BaseDatos:Proveedor`: `SgcpContextSqlServer` con migración propia (`Datos/MigracionesSqlServer`) y script `database/EsquemaSqlServer.sql`; manejo de interbloqueos de SQL Server; verificador con `SGCP_SQLSERVER_TEST` y flujo de CI con SQL Server 2022. MySQL sigue siendo el motor por defecto y no cambia | Dario Haziel Tambo Parra |
 | v4.1.1 | 2026-11-18 | 4 | Corrección pedida por la web (S3/S4-P2): `GET recepciones/conflictos` y `GET recepciones/{id}` devuelven la versión y el estado actuales de la entrega, para que Ventas revise conflictos sin `entregas.administrar`; el reporte ENTREGAS trae la columna «Entrega» con el id, y `GET pedidos/{pedidoId}/constancia` emite la constancia a Ventas y al comprador conociendo solo el pedido | Dario Haziel Tambo Parra |
 | v4.1.0 | 2026-11-07 | 2, 3 y 4 | Parte de API de los tres sprints (S2-P1, S3-P1, S4-P1): producción, sanidad, lotes, pesajes, inventario, reservas y frío; pagos, señas, saldos, transportes, entregas y sincronización con evidencias; reportes por perfil con exportación PDF y Excel, constancia y Adapter fiscal sin proveedor. Patrones Factory Method, Strategy, Facade y Adapter | Dario Haziel Tambo Parra |
 | v1.0.1 | 2026-11-07 | 1 | Corrección: el esquema de versiones aclara que MENOR es el número de parte y que la etiqueta de cierre del sprint es `vN.4.0` | Dario Haziel Tambo Parra |

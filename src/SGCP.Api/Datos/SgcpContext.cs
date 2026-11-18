@@ -2,8 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using SGCP.Api.Dominio.Entidades;
 namespace SGCP.Api.Datos;
 
-public class SgcpContext(DbContextOptions<SgcpContext> opciones) : DbContext(opciones)
+public class SgcpContext : DbContext
 {
+    public SgcpContext(DbContextOptions<SgcpContext> opciones) : base(opciones) { }
+    /// <summary>Para contextos derivados por motor (ver <see cref="SgcpContextSqlServer"/>).</summary>
+    protected SgcpContext(DbContextOptions opciones) : base(opciones) { }
+
     public DbSet<Permiso> Permisos => Set<Permiso>();
     public DbSet<Rol> Roles => Set<Rol>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();

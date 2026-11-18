@@ -16,6 +16,6 @@ $config | ConvertTo-Json | dotnet user-secrets set --project $proyecto
 if ($LASTEXITCODE -ne 0) { throw 'No se pudo guardar la configuración local.' }
 dotnet tool restore
 if ($LASTEXITCODE -ne 0) { throw 'No se pudo restaurar dotnet-ef.' }
-dotnet ef database update --project $proyecto
+dotnet ef database update --project $proyecto --context SgcpContext
 if ($LASTEXITCODE -ne 0) { throw 'Falló la migración. Revisa servidor, credenciales y permisos.' }
 Write-Host 'Base preparada. Ejecuta: dotnet run --project src/SGCP.Api'

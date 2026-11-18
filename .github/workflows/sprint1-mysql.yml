@@ -35,8 +35,8 @@ jobs:
       - name: Revisar migraciones
         run: |
           dotnet tool restore
-          dotnet ef migrations has-pending-model-changes --project src/SGCP.Api --configuration Release --no-build
-          dotnet ef migrations script --project src/SGCP.Api --configuration Release --no-build --output artifacts/EsquemaCompleto.sql
+          dotnet ef migrations has-pending-model-changes --project src/SGCP.Api --context SgcpContext --configuration Release --no-build
+          dotnet ef migrations script --project src/SGCP.Api --context SgcpContext --configuration Release --no-build --output artifacts/EsquemaCompleto.sql
       - name: Aplicar migraciones y probar API en MySQL (es-BO y cultura invariante)
         shell: bash
         run: |
