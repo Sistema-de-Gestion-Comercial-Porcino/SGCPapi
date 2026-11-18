@@ -18,14 +18,9 @@
 # Los registros del recorrido quedan en la base para comprobar la persistencia.
 # Ejecuta el archivo contra una base de desarrollo destinada a estas pruebas.
 
-@token = {{login.response.body.$.token}}
-@clienteId = {{crearCliente.response.body.$.id}}
-@productoId = {{crearProducto.response.body.$.id}}
-@cotizacionId = {{crearCotizacion.response.body.$.id}}
-
 ### 1 · POST auth/login → 200
 # Comprobar que la respuesta contiene token y expira.
-# La variable token reutiliza el JWT que devuelve esta solicitud.
+# Cada cabecera Authorization toma el JWT directamente de esta respuesta.
 # @name login
 POST {{api}}/auth/login
 Content-Type: application/json
@@ -40,7 +35,7 @@ Accept: application/json
 # Comprobar elementos, pagina, tamanoPagina, totalRegistros y totalPaginas.
 # @name listarClientes
 GET {{api}}/clientes?pagina=1&tamanoPagina=20
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Accept: application/json
 
 ### 3 · POST clientes válido → 201 con Location
@@ -48,7 +43,7 @@ Accept: application/json
 # Comprobar id, nombre, fechaAlta y la cabecera Location.
 # @name crearCliente
 POST {{api}}/clientes
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -66,14 +61,14 @@ Accept: application/json
 # Comprobar que id coincide con el del paso 3.
 # @name consultarPorLocation
 GET {{crearCliente.response.headers.Location}}
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Accept: application/json
 
 ### 5 · POST clientes sin nombre → 400
 # Comprobar codigo DATOS_INVALIDOS y el detalle del campo Nombre.
 # @name clienteSinNombre
 POST {{api}}/clientes
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -90,7 +85,7 @@ Accept: application/json
 # Los códigos con timestamp permiten repetir el recorrido.
 # @name crearClasificacion
 POST {{api}}/clasificaciones
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -105,7 +100,7 @@ Accept: application/json
 # Crear el catálogo no crea existencias físicas.
 # @name crearProducto
 POST {{api}}/productos
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -121,8 +116,8 @@ Accept: application/json
 ### Preparación C · POST productos/{id}/precios → 201
 # Costo 1 y precio 2 son valores sintéticos para comprobar el recorrido.
 # @name crearPrecio
-POST {{api}}/productos/{{productoId}}/precios
-Authorization: Bearer {{token}}
+POST {{api}}/productos/{{crearProducto.response.body.$.id}}/precios
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -139,7 +134,7 @@ Accept: application/json
 # Comprobar codigo CLIENTE_NO_ACTIVO y que la solicitud no crea una cotización.
 # @name cotizacionClienteInexistente
 POST {{api}}/cotizaciones
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -149,7 +144,7 @@ Accept: application/json
   "vigenteHasta": "{{$datetime iso8601 1 d}}",
   "detalles": [
     {
-      "productoId": "{{productoId}}",
+      "productoId": "{{crearProducto.response.body.$.id}}",
       "cantidad": 1,
       "unidad": "kg",
       "precioUnitario": 2
@@ -160,8 +155,8 @@ Accept: application/json
 ### 7 · PUT clientes/{id} → 200
 # Comprobar el mismo id, nombre actualizado y observaciones.
 # @name editarCliente
-PUT {{api}}/clientes/{{clienteId}}
-Authorization: Bearer {{token}}
+PUT {{api}}/clientes/{{crearCliente.response.body.$.id}}
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -179,17 +174,17 @@ Accept: application/json
 # Comprobar id y Location. Esta cotización constituye historial del cliente.
 # @name crearCotizacion
 POST {{api}}/cotizaciones
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
 {
-  "clienteId": "{{clienteId}}",
+  "clienteId": "{{crearCliente.response.body.$.id}}",
   "canal": "LOCAL",
   "vigenteHasta": "{{$datetime iso8601 1 d}}",
   "detalles": [
     {
-      "productoId": "{{productoId}}",
+      "productoId": "{{crearProducto.response.body.$.id}}",
       "cantidad": 1,
       "unidad": "kg",
       "precioUnitario": 2
@@ -199,25 +194,25 @@ Accept: application/json
 
 ### Preparación E · POST cotizaciones/{id}/presentar → 204
 # @name presentarCotizacion
-POST {{api}}/cotizaciones/{{cotizacionId}}/presentar
-Authorization: Bearer {{token}}
+POST {{api}}/cotizaciones/{{crearCotizacion.response.body.$.id}}/presentar
+Authorization: Bearer {{login.response.body.$.token}}
 
 ### Preparación F · POST cotizaciones/{id}/aceptar → 204
 # La aceptación vigente habilita la confirmación del pedido.
 # @name aceptarCotizacion
-POST {{api}}/cotizaciones/{{cotizacionId}}/aceptar
-Authorization: Bearer {{token}}
+POST {{api}}/cotizaciones/{{crearCotizacion.response.body.$.id}}/aceptar
+Authorization: Bearer {{login.response.body.$.token}}
 
 ### Preparación G · POST pedidos → 201
 # Guardar id para comprobar que aparece en el recurso relacionado.
 # @name confirmarPedido
 POST {{api}}/pedidos
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
 {
-  "cotizacionId": "{{cotizacionId}}",
+  "cotizacionId": "{{crearCotizacion.response.body.$.id}}",
   "fechaComprometida": "{{$datetime iso8601 2 d}}",
   "condicionPago": "CONTADO"
 }
@@ -226,30 +221,30 @@ Accept: application/json
 # Comprobar que elementos contiene el id devuelto por confirmarPedido.
 # El pedido debe tener codigo, fecha, estadoComercial CONFIRMADO y total 2.
 # @name consultarPedidos
-GET {{api}}/clientes/{{clienteId}}/pedidos?pagina=1&tamanoPagina=20
-Authorization: Bearer {{token}}
+GET {{api}}/clientes/{{crearCliente.response.body.$.id}}/pedidos?pagina=1&tamanoPagina=20
+Authorization: Bearer {{login.response.body.$.token}}
 Accept: application/json
 
 ### 9 · GET clientes/{guid inexistente} → 404
 # Comprobar codigo NO_ENCONTRADO.
 # @name clienteInexistente
 GET {{api}}/clientes/00000000-0000-0000-0000-000000000000
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Accept: application/json
 
 ### 10 · DELETE clientes/{id} con historial → 409
 # Comprobar codigo CLIENTE_CON_HISTORIAL.
 # El cliente del paso 3 conserva su cotización y pedido.
 # @name borrarClienteConHistorial
-DELETE {{api}}/clientes/{{clienteId}}
-Authorization: Bearer {{token}}
+DELETE {{api}}/clientes/{{crearCliente.response.body.$.id}}
+Authorization: Bearer {{login.response.body.$.token}}
 Accept: application/json
 
 ### Preparación H · POST otro cliente sin historial → 201 con Location
 # Este segundo cliente se elimina en el paso 11.
 # @name crearClienteEliminable
 POST {{api}}/clientes
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Content-Type: application/json
 Accept: application/json
 
@@ -267,13 +262,13 @@ Accept: application/json
 # Comprobar que el cuerpo está vacío.
 # @name borrarClienteSinHistorial
 DELETE {{api}}/clientes/{{crearClienteEliminable.response.body.$.id}}
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 
 ### Comprobación del paso 11 · GET cliente eliminado → 404
 # Comprobar codigo NO_ENCONTRADO.
 # @name consultarClienteEliminado
 GET {{crearClienteEliminable.response.headers.Location}}
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Accept: application/json
 
 ### 12 · Persistencia tras detener y volver a iniciar la API · GET clientes/{id} → 200
@@ -284,5 +279,5 @@ Accept: application/json
 # Si responde 401 por vencimiento, ejecuta solo el login del paso 1 y reintenta.
 # @name comprobarPersistencia
 GET {{crearCliente.response.headers.Location}}
-Authorization: Bearer {{token}}
+Authorization: Bearer {{login.response.body.$.token}}
 Accept: application/json
