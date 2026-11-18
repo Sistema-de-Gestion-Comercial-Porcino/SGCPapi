@@ -24,6 +24,14 @@ public class ErroresMiddleware(RequestDelegate siguiente, ILogger<ErroresMiddlew
                 "Otra operación actualizó los mismos datos. Actualiza y vuelve a intentar.",
                 []));
         }
+        catch (Microsoft.Data.SqlClient.SqlException e) when (e.Number == 1205 || e.Number == 1222)
+        {
+            // SQL Server: 1205 = víctima de interbloqueo, 1222 = tiempo de espera de bloqueo (equivalentes a 1213/1205 de MySQL).
+            contexto.Response.StatusCode = 409;
+            await contexto.Response.WriteAsJsonAsync(new ErrorRespuesta("CONFLICTO_CONCURRENTE",
+                "Otra operación actualizó los mismos datos. Actualiza y vuelve a intentar.",
+                []));
+        }
         catch (DbUpdateException e)
         {
             log.LogWarning(e, "Conflicto al persistir una operación");

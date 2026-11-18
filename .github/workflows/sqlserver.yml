@@ -1,0 +1,52 @@
+name: API Sprints 1–4 · SQL Server
+on:
+  push:
+    branches: [main, 'trabajo/**', 'sprint*/**', 'webiii/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Iniciar SQL Server temporal
+        shell: bash
+        run: |
+          sa_password="Sgcp-$(openssl rand -hex 16)-Aa1"
+          echo "::add-mask::$sa_password"
+          echo "SGCP_SQLSERVER_TEST=Server=127.0.0.1,1433;User ID=sa;Password=$sa_password;TrustServerCertificate=True" >> "$GITHUB_ENV"
+          docker run -d --name sgcp-sqlserver -p 1433:1433 -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD="$sa_password" mcr.microsoft.com/mssql/server:2022-latest
+          for intento in $(seq 1 60); do
+            if docker exec sgcp-sqlserver /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$sa_password" -Q 'SELECT 1' > /dev/null 2>&1; then exit 0; fi
+            sleep 3
+          done
+          docker logs sgcp-sqlserver
+          exit 1
+      - name: Compilar
+        run: dotnet build SGCPapi.sln --configuration Release --warnaserror
+      - name: Revisar migraciones de SQL Server
+        run: |
+          dotnet tool restore
+          dotnet ef migrations has-pending-model-changes --project src/SGCP.Api --context SgcpContextSqlServer --configuration Release --no-build
+          dotnet ef migrations script --project src/SGCP.Api --context SgcpContextSqlServer --idempotent --configuration Release --no-build --output artifacts/EsquemaSqlServer.sql
+      - name: Aplicar migraciones y probar API en SQL Server
+        shell: bash
+        run: |
+          sudo locale-gen es_BO.UTF-8
+          LANG=es_BO.UTF-8 LC_ALL=es_BO.UTF-8 dotnet run --project tests/SGCP.Verificacion --configuration Release --no-build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: migracion-sqlserver
+          path: artifacts/EsquemaSqlServer.sql
+      - name: Detener instancia temporal
+        if: always()
+        run: docker rm -f sgcp-sqlserver
