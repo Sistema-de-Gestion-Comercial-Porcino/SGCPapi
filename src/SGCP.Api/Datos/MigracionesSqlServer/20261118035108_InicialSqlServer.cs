@@ -1260,9 +1260,9 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
             migrationBuilder.CreateIndex(
                 name: "IX_Clientes_IdentificacionFiscalUnica",
                 table: "Clientes",
-                column: "IdentificacionFiscalUnica",
+                column: "IdentificacionFiscal",
                 unique: true,
-                filter: "[IdentificacionFiscalUnica] IS NOT NULL");
+                filter: "[Activo] = 1 AND [IdentificacionFiscal] <> ''");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ComprobantesFiscales_PedidoId",
@@ -1284,14 +1284,9 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
             migrationBuilder.CreateIndex(
                 name: "IX_CondicionesPago_PedidoActivo",
                 table: "CondicionesPago",
-                column: "PedidoActivo",
+                column: "PedidoId",
                 unique: true,
-                filter: "[PedidoActivo] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CondicionesPago_PedidoId",
-                table: "CondicionesPago",
-                column: "PedidoId");
+                filter: "[Activa] = 1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CondicionesPago_ResponsableId",
@@ -1495,14 +1490,9 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
             migrationBuilder.CreateIndex(
                 name: "IX_OrdenesProduccion_AnimalEnOrden",
                 table: "OrdenesProduccion",
-                column: "AnimalEnOrden",
+                column: "AnimalId",
                 unique: true,
-                filter: "[AnimalEnOrden] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrdenesProduccion_AnimalId",
-                table: "OrdenesProduccion",
-                column: "AnimalId");
+                filter: "[Estado] <> 'ANULADA' AND [AnimalId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrdenesProduccion_Codigo",
@@ -1573,9 +1563,9 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
             migrationBuilder.CreateIndex(
                 name: "IX_PreciosProducto_ProductoConVigenciaAbierta",
                 table: "PreciosProducto",
-                column: "ProductoConVigenciaAbierta",
+                column: "ProductoId",
                 unique: true,
-                filter: "[ProductoConVigenciaAbierta] IS NOT NULL");
+                filter: "[VigenteHasta] IS NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PreciosProducto_ProductoId_VigenteDesde",
@@ -1619,14 +1609,9 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
             migrationBuilder.CreateIndex(
                 name: "IX_Recepciones_EntregaConfirmada",
                 table: "Recepciones",
-                column: "EntregaConfirmada",
+                column: "EntregaId",
                 unique: true,
-                filter: "[EntregaConfirmada] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Recepciones_EntregaId",
-                table: "Recepciones",
-                column: "EntregaId");
+                filter: "[Estado] = 'CONFIRMADA'");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Recepciones_RevisadaPorId",
@@ -1652,14 +1637,9 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
             migrationBuilder.CreateIndex(
                 name: "IX_Reservas_DetalleActivo_ExistenciaId",
                 table: "Reservas",
-                columns: new[] { "DetalleActivo", "ExistenciaId" },
+                columns: new[] { "DetallePedidoId", "ExistenciaId" },
                 unique: true,
-                filter: "[DetalleActivo] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Reservas_DetallePedidoId",
-                table: "Reservas",
-                column: "DetallePedidoId");
+                filter: "[Estado] = 'ACTIVA'");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Reservas_ExistenciaId",

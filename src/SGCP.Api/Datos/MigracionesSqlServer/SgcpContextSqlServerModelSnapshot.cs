@@ -265,9 +265,10 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IdentificacionFiscalUnica")
+                    b.HasIndex(new[] { "IdentificacionFiscal" }, "IX_Clientes_IdentificacionFiscalUnica")
                         .IsUnique()
-                        .HasFilter("[IdentificacionFiscalUnica] IS NOT NULL");
+                        .HasDatabaseName("IX_Clientes_IdentificacionFiscalUnica")
+                        .HasFilter("[Activo] = 1 AND [IdentificacionFiscal] <> ''");
 
                     b.ToTable("Clientes", (string)null);
                 });
@@ -357,13 +358,12 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
 
                     b.HasKey("Id");
 
-                    b.HasIndex("PedidoActivo")
-                        .IsUnique()
-                        .HasFilter("[PedidoActivo] IS NOT NULL");
-
-                    b.HasIndex("PedidoId");
-
                     b.HasIndex("ResponsableId");
+
+                    b.HasIndex(new[] { "PedidoId" }, "IX_CondicionesPago_PedidoActivo")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CondicionesPago_PedidoActivo")
+                        .HasFilter("[Activa] = 1");
 
                     b.ToTable("CondicionesPago", (string)null);
                 });
@@ -1022,16 +1022,15 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AnimalEnOrden")
-                        .IsUnique()
-                        .HasFilter("[AnimalEnOrden] IS NOT NULL");
-
-                    b.HasIndex("AnimalId");
-
                     b.HasIndex("Codigo")
                         .IsUnique();
 
                     b.HasIndex("ResponsableId");
+
+                    b.HasIndex(new[] { "AnimalId" }, "IX_OrdenesProduccion_AnimalEnOrden")
+                        .IsUnique()
+                        .HasDatabaseName("IX_OrdenesProduccion_AnimalEnOrden")
+                        .HasFilter("[Estado] <> 'ANULADA' AND [AnimalId] IS NOT NULL");
 
                     b.ToTable("OrdenesProduccion", (string)null);
                 });
@@ -1271,12 +1270,13 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductoConVigenciaAbierta")
-                        .IsUnique()
-                        .HasFilter("[ProductoConVigenciaAbierta] IS NOT NULL");
-
                     b.HasIndex("ProductoId", "VigenteDesde")
                         .IsUnique();
+
+                    b.HasIndex(new[] { "ProductoId" }, "IX_PreciosProducto_ProductoConVigenciaAbierta")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PreciosProducto_ProductoConVigenciaAbierta")
+                        .HasFilter("[VigenteHasta] IS NULL");
 
                     b.ToTable("PreciosProducto", (string)null);
                 });
@@ -1450,13 +1450,12 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
                     b.HasIndex("ClaveUnica")
                         .IsUnique();
 
-                    b.HasIndex("EntregaConfirmada")
-                        .IsUnique()
-                        .HasFilter("[EntregaConfirmada] IS NOT NULL");
-
-                    b.HasIndex("EntregaId");
-
                     b.HasIndex("RevisadaPorId");
+
+                    b.HasIndex(new[] { "EntregaId" }, "IX_Recepciones_EntregaConfirmada")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Recepciones_EntregaConfirmada")
+                        .HasFilter("[Estado] = 'CONFIRMADA'");
 
                     b.ToTable("Recepciones", (string)null);
                 });
@@ -1569,15 +1568,14 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DetallePedidoId");
-
                     b.HasIndex("ExistenciaId");
 
                     b.HasIndex("ResponsableId");
 
-                    b.HasIndex("DetalleActivo", "ExistenciaId")
+                    b.HasIndex(new[] { "DetallePedidoId", "ExistenciaId" }, "IX_Reservas_DetalleActivo_ExistenciaId")
                         .IsUnique()
-                        .HasFilter("[DetalleActivo] IS NOT NULL");
+                        .HasDatabaseName("IX_Reservas_DetalleActivo_ExistenciaId")
+                        .HasFilter("[Estado] = 'ACTIVA'");
 
                     b.ToTable("Reservas", (string)null);
                 });

@@ -11,7 +11,7 @@ GO
 BEGIN TRANSACTION;
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Animales] (
@@ -29,7 +29,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [ClasificacionesProducto] (
@@ -45,7 +45,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Clientes] (
@@ -66,7 +66,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Permisos] (
@@ -81,7 +81,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Roles] (
@@ -95,7 +95,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Transportes] (
@@ -114,7 +114,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Productos] (
@@ -134,7 +134,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Cotizaciones] (
@@ -156,7 +156,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Usuarios] (
@@ -178,7 +178,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [RolesPermisos] (
@@ -192,7 +192,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [PreciosProducto] (
@@ -210,7 +210,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [DetallesCotizacion] (
@@ -229,7 +229,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Pedidos] (
@@ -253,7 +253,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [ControlesSanitarios] (
@@ -271,7 +271,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [OrdenesProduccion] (
@@ -296,7 +296,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Pagos] (
@@ -318,7 +318,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [RecuperacionesAcceso] (
@@ -336,7 +336,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [RegistrosAuditoria] (
@@ -353,7 +353,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Rutas] (
@@ -374,7 +374,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Sesiones] (
@@ -390,7 +390,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [UsuariosRoles] (
@@ -404,7 +404,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [ComprobantesFiscales] (
@@ -424,7 +424,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [CondicionesPago] (
@@ -445,7 +445,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [DetallesPedido] (
@@ -466,7 +466,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Lotes] (
@@ -488,7 +488,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [PrevisionesProducto] (
@@ -505,7 +505,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Senas] (
@@ -522,7 +522,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Entregas] (
@@ -548,7 +548,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Cargos] (
@@ -571,7 +571,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Existencias] (
@@ -588,7 +588,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Incidencias] (
@@ -610,7 +610,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Pesajes] (
@@ -633,7 +633,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [ResultadosProduccion] (
@@ -653,7 +653,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [ControlesFrio] (
@@ -676,7 +676,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Recepciones] (
@@ -709,7 +709,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [AplicacionesPago] (
@@ -728,7 +728,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [InsumosProduccion] (
@@ -749,7 +749,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [MovimientosStock] (
@@ -769,7 +769,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [Reservas] (
@@ -791,7 +791,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [EntradasInventario] (
@@ -819,7 +819,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE TABLE [EvidenciasRecepcion] (
@@ -835,7 +835,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Animales_Identificacion] ON [Animales] ([Identificacion]);
@@ -843,7 +843,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_AplicacionesPago_CargoId] ON [AplicacionesPago] ([CargoId]);
@@ -851,7 +851,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_AplicacionesPago_PagoId_CargoId] ON [AplicacionesPago] ([PagoId], [CargoId]);
@@ -859,7 +859,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     EXEC(N'CREATE UNIQUE INDEX [IX_AplicacionesPago_SenaId] ON [AplicacionesPago] ([SenaId]) WHERE [SenaId] IS NOT NULL');
@@ -867,7 +867,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     EXEC(N'CREATE UNIQUE INDEX [IX_Cargos_DetallePedidoId] ON [Cargos] ([DetallePedidoId]) WHERE [DetallePedidoId] IS NOT NULL');
@@ -875,7 +875,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Cargos_PedidoId] ON [Cargos] ([PedidoId]);
@@ -883,7 +883,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_ClasificacionesProducto_Codigo] ON [ClasificacionesProducto] ([Codigo]);
@@ -891,15 +891,15 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
-    EXEC(N'CREATE UNIQUE INDEX [IX_Clientes_IdentificacionFiscalUnica] ON [Clientes] ([IdentificacionFiscalUnica]) WHERE [IdentificacionFiscalUnica] IS NOT NULL');
+    EXEC(N'CREATE UNIQUE INDEX [IX_Clientes_IdentificacionFiscalUnica] ON [Clientes] ([IdentificacionFiscal]) WHERE [Activo] = 1 AND [IdentificacionFiscal] <> ''''');
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_ComprobantesFiscales_PedidoId] ON [ComprobantesFiscales] ([PedidoId]);
@@ -907,7 +907,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_ComprobantesFiscales_ReferenciaUnica] ON [ComprobantesFiscales] ([ReferenciaUnica]);
@@ -915,7 +915,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_ComprobantesFiscales_ResponsableId] ON [ComprobantesFiscales] ([ResponsableId]);
@@ -923,23 +923,15 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
-    EXEC(N'CREATE UNIQUE INDEX [IX_CondicionesPago_PedidoActivo] ON [CondicionesPago] ([PedidoActivo]) WHERE [PedidoActivo] IS NOT NULL');
+    EXEC(N'CREATE UNIQUE INDEX [IX_CondicionesPago_PedidoActivo] ON [CondicionesPago] ([PedidoId]) WHERE [Activa] = 1');
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
-)
-BEGIN
-    CREATE INDEX [IX_CondicionesPago_PedidoId] ON [CondicionesPago] ([PedidoId]);
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_CondicionesPago_ResponsableId] ON [CondicionesPago] ([ResponsableId]);
@@ -947,7 +939,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_ControlesFrio_EntregaId] ON [ControlesFrio] ([EntregaId]);
@@ -955,7 +947,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_ControlesFrio_LoteId] ON [ControlesFrio] ([LoteId]);
@@ -963,7 +955,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_ControlesFrio_ResponsableId] ON [ControlesFrio] ([ResponsableId]);
@@ -971,7 +963,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_ControlesSanitarios_AnimalId_Fecha] ON [ControlesSanitarios] ([AnimalId], [Fecha]);
@@ -979,7 +971,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_ControlesSanitarios_ResponsableId] ON [ControlesSanitarios] ([ResponsableId]);
@@ -987,7 +979,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Cotizaciones_ClienteId] ON [Cotizaciones] ([ClienteId]);
@@ -995,7 +987,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Cotizaciones_Codigo] ON [Cotizaciones] ([Codigo]);
@@ -1003,7 +995,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     EXEC(N'CREATE UNIQUE INDEX [IX_Cotizaciones_CotizacionOrigenId] ON [Cotizaciones] ([CotizacionOrigenId]) WHERE [CotizacionOrigenId] IS NOT NULL');
@@ -1011,7 +1003,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_DetallesCotizacion_CotizacionId] ON [DetallesCotizacion] ([CotizacionId]);
@@ -1019,7 +1011,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_DetallesCotizacion_ProductoId] ON [DetallesCotizacion] ([ProductoId]);
@@ -1027,7 +1019,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_DetallesPedido_PedidoId] ON [DetallesPedido] ([PedidoId]);
@@ -1035,7 +1027,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_DetallesPedido_ProductoId] ON [DetallesPedido] ([ProductoId]);
@@ -1043,7 +1035,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_EntradasInventario_AnuladaPorId] ON [EntradasInventario] ([AnuladaPorId]);
@@ -1051,7 +1043,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_EntradasInventario_ExistenciaId] ON [EntradasInventario] ([ExistenciaId]);
@@ -1059,7 +1051,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_EntradasInventario_LoteId_ProductoId] ON [EntradasInventario] ([LoteId], [ProductoId]);
@@ -1067,7 +1059,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_EntradasInventario_PesajeId] ON [EntradasInventario] ([PesajeId]);
@@ -1075,7 +1067,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_EntradasInventario_ProductoId] ON [EntradasInventario] ([ProductoId]);
@@ -1083,7 +1075,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_EntradasInventario_ResponsableId] ON [EntradasInventario] ([ResponsableId]);
@@ -1091,7 +1083,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Entregas_PedidoId] ON [Entregas] ([PedidoId]);
@@ -1099,7 +1091,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Entregas_ResponsableId_Estado] ON [Entregas] ([ResponsableId], [Estado]);
@@ -1107,7 +1099,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Entregas_RutaId] ON [Entregas] ([RutaId]);
@@ -1115,7 +1107,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_EvidenciasRecepcion_RecepcionId] ON [EvidenciasRecepcion] ([RecepcionId]);
@@ -1123,7 +1115,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Existencias_LoteId_ProductoId] ON [Existencias] ([LoteId], [ProductoId]);
@@ -1131,7 +1123,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Existencias_ProductoId] ON [Existencias] ([ProductoId]);
@@ -1139,7 +1131,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Incidencias_AnimalId] ON [Incidencias] ([AnimalId]);
@@ -1147,7 +1139,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Incidencias_LoteId] ON [Incidencias] ([LoteId]);
@@ -1155,7 +1147,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Incidencias_ResponsableId] ON [Incidencias] ([ResponsableId]);
@@ -1163,7 +1155,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_InsumosProduccion_ExistenciaId] ON [InsumosProduccion] ([ExistenciaId]);
@@ -1171,7 +1163,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_InsumosProduccion_OrdenProduccionId] ON [InsumosProduccion] ([OrdenProduccionId]);
@@ -1179,7 +1171,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_InsumosProduccion_ReferenciaUnica] ON [InsumosProduccion] ([ReferenciaUnica]);
@@ -1187,7 +1179,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_InsumosProduccion_ResponsableId] ON [InsumosProduccion] ([ResponsableId]);
@@ -1195,7 +1187,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Lotes_Codigo] ON [Lotes] ([Codigo]);
@@ -1203,7 +1195,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Lotes_OrdenProduccionId] ON [Lotes] ([OrdenProduccionId]);
@@ -1211,7 +1203,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Lotes_ProductoId] ON [Lotes] ([ProductoId]);
@@ -1219,7 +1211,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_MovimientosStock_ExistenciaId] ON [MovimientosStock] ([ExistenciaId]);
@@ -1227,7 +1219,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_MovimientosStock_ResponsableId] ON [MovimientosStock] ([ResponsableId]);
@@ -1235,7 +1227,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_MovimientosStock_Tipo_ReferenciaId] ON [MovimientosStock] ([Tipo], [ReferenciaId]);
@@ -1243,23 +1235,15 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
-    EXEC(N'CREATE UNIQUE INDEX [IX_OrdenesProduccion_AnimalEnOrden] ON [OrdenesProduccion] ([AnimalEnOrden]) WHERE [AnimalEnOrden] IS NOT NULL');
+    EXEC(N'CREATE UNIQUE INDEX [IX_OrdenesProduccion_AnimalEnOrden] ON [OrdenesProduccion] ([AnimalId]) WHERE [Estado] <> ''ANULADA'' AND [AnimalId] IS NOT NULL');
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
-)
-BEGIN
-    CREATE INDEX [IX_OrdenesProduccion_AnimalId] ON [OrdenesProduccion] ([AnimalId]);
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_OrdenesProduccion_Codigo] ON [OrdenesProduccion] ([Codigo]);
@@ -1267,7 +1251,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_OrdenesProduccion_ResponsableId] ON [OrdenesProduccion] ([ResponsableId]);
@@ -1275,7 +1259,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Pagos_ClienteId_Fecha] ON [Pagos] ([ClienteId], [Fecha]);
@@ -1283,7 +1267,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Pagos_ReferenciaUnica] ON [Pagos] ([ReferenciaUnica]);
@@ -1291,7 +1275,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Pagos_ResponsableId] ON [Pagos] ([ResponsableId]);
@@ -1299,7 +1283,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Pedidos_ClienteId] ON [Pedidos] ([ClienteId]);
@@ -1307,7 +1291,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Pedidos_Codigo] ON [Pedidos] ([Codigo]);
@@ -1315,7 +1299,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Pedidos_CotizacionId] ON [Pedidos] ([CotizacionId]);
@@ -1323,7 +1307,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Permisos_Codigo] ON [Permisos] ([Codigo]);
@@ -1331,7 +1315,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Pesajes_LoteId] ON [Pesajes] ([LoteId]);
@@ -1339,7 +1323,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Pesajes_ProductoId] ON [Pesajes] ([ProductoId]);
@@ -1347,7 +1331,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Pesajes_ResponsableId] ON [Pesajes] ([ResponsableId]);
@@ -1355,15 +1339,15 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
-    EXEC(N'CREATE UNIQUE INDEX [IX_PreciosProducto_ProductoConVigenciaAbierta] ON [PreciosProducto] ([ProductoConVigenciaAbierta]) WHERE [ProductoConVigenciaAbierta] IS NOT NULL');
+    EXEC(N'CREATE UNIQUE INDEX [IX_PreciosProducto_ProductoConVigenciaAbierta] ON [PreciosProducto] ([ProductoId]) WHERE [VigenteHasta] IS NULL');
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_PreciosProducto_ProductoId_VigenteDesde] ON [PreciosProducto] ([ProductoId], [VigenteDesde]);
@@ -1371,7 +1355,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_PrevisionesProducto_OrdenProduccionId_ProductoId] ON [PrevisionesProducto] ([OrdenProduccionId], [ProductoId]);
@@ -1379,7 +1363,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_PrevisionesProducto_ProductoId] ON [PrevisionesProducto] ([ProductoId]);
@@ -1387,7 +1371,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Productos_ClasificacionProductoId] ON [Productos] ([ClasificacionProductoId]);
@@ -1395,7 +1379,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Productos_Codigo] ON [Productos] ([Codigo]);
@@ -1403,7 +1387,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Recepciones_AutorId] ON [Recepciones] ([AutorId]);
@@ -1411,7 +1395,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Recepciones_ClaveUnica] ON [Recepciones] ([ClaveUnica]);
@@ -1419,23 +1403,15 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
-    EXEC(N'CREATE UNIQUE INDEX [IX_Recepciones_EntregaConfirmada] ON [Recepciones] ([EntregaConfirmada]) WHERE [EntregaConfirmada] IS NOT NULL');
+    EXEC(N'CREATE UNIQUE INDEX [IX_Recepciones_EntregaConfirmada] ON [Recepciones] ([EntregaId]) WHERE [Estado] = ''CONFIRMADA''');
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
-)
-BEGIN
-    CREATE INDEX [IX_Recepciones_EntregaId] ON [Recepciones] ([EntregaId]);
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Recepciones_RevisadaPorId] ON [Recepciones] ([RevisadaPorId]);
@@ -1443,7 +1419,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_RecuperacionesAcceso_TokenHash] ON [RecuperacionesAcceso] ([TokenHash]);
@@ -1451,7 +1427,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_RecuperacionesAcceso_UsuarioId] ON [RecuperacionesAcceso] ([UsuarioId]);
@@ -1459,7 +1435,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_RegistrosAuditoria_UsuarioId] ON [RegistrosAuditoria] ([UsuarioId]);
@@ -1467,23 +1443,15 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
-    EXEC(N'CREATE UNIQUE INDEX [IX_Reservas_DetalleActivo_ExistenciaId] ON [Reservas] ([DetalleActivo], [ExistenciaId]) WHERE [DetalleActivo] IS NOT NULL');
+    EXEC(N'CREATE UNIQUE INDEX [IX_Reservas_DetalleActivo_ExistenciaId] ON [Reservas] ([DetallePedidoId], [ExistenciaId]) WHERE [Estado] = ''ACTIVA''');
 END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
-)
-BEGIN
-    CREATE INDEX [IX_Reservas_DetallePedidoId] ON [Reservas] ([DetallePedidoId]);
-END;
-
-IF NOT EXISTS (
-    SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Reservas_ExistenciaId] ON [Reservas] ([ExistenciaId]);
@@ -1491,7 +1459,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Reservas_ResponsableId] ON [Reservas] ([ResponsableId]);
@@ -1499,7 +1467,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_ResultadosProduccion_LoteId] ON [ResultadosProduccion] ([LoteId]);
@@ -1507,7 +1475,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_ResultadosProduccion_OrdenProduccionId] ON [ResultadosProduccion] ([OrdenProduccionId]);
@@ -1515,7 +1483,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_ResultadosProduccion_ProductoId] ON [ResultadosProduccion] ([ProductoId]);
@@ -1523,7 +1491,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Roles_Nombre] ON [Roles] ([Nombre]);
@@ -1531,7 +1499,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_RolesPermisos_RolId] ON [RolesPermisos] ([RolId]);
@@ -1539,7 +1507,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Rutas_Codigo] ON [Rutas] ([Codigo]);
@@ -1547,7 +1515,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Rutas_ResponsableId] ON [Rutas] ([ResponsableId]);
@@ -1555,7 +1523,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Rutas_TransporteId] ON [Rutas] ([TransporteId]);
@@ -1563,7 +1531,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Senas_PagoId] ON [Senas] ([PagoId]);
@@ -1571,7 +1539,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Senas_PedidoId] ON [Senas] ([PedidoId]);
@@ -1579,7 +1547,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Sesiones_UsuarioId_Revocada] ON [Sesiones] ([UsuarioId], [Revocada]);
@@ -1587,7 +1555,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Transportes_Codigo] ON [Transportes] ([Codigo]);
@@ -1595,7 +1563,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_Usuarios_ClienteId] ON [Usuarios] ([ClienteId]);
@@ -1603,7 +1571,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Usuarios_Correo] ON [Usuarios] ([Correo]);
@@ -1611,7 +1579,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE UNIQUE INDEX [IX_Usuarios_Login] ON [Usuarios] ([Login]);
@@ -1619,7 +1587,7 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     CREATE INDEX [IX_UsuariosRoles_UsuarioId] ON [UsuariosRoles] ([UsuarioId]);
@@ -1627,11 +1595,11 @@ END;
 
 IF NOT EXISTS (
     SELECT * FROM [__EFMigrationsHistory]
-    WHERE [MigrationId] = N'20261118034143_InicialSqlServer'
+    WHERE [MigrationId] = N'20261118035108_InicialSqlServer'
 )
 BEGIN
     INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
-    VALUES (N'20261118034143_InicialSqlServer', N'10.0.12');
+    VALUES (N'20261118035108_InicialSqlServer', N'10.0.12');
 END;
 
 COMMIT;

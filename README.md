@@ -71,7 +71,11 @@ La API funciona con **MySQL 8** (valor por defecto) o con **SQL Server 2019 o po
 | MySQL 8 | `MySql` (o vacío) | `SgcpContext` | `src/SGCP.Api/Datos/Migraciones/` |
 | SQL Server | `SqlServer` | `SgcpContextSqlServer` | `src/SGCP.Api/Datos/MigracionesSqlServer/` |
 
-El modelo es el mismo. Solo cambian tres cosas: las columnas calculadas usan `[Columna]` en lugar de `` `Columna` ``, el contenido de las evidencias va en `varbinary(max)` en lugar de `mediumblob`, y los índices únicos sobre columnas que admiten NULL llevan el filtro `IS NOT NULL`.
+El modelo es el mismo. Solo cambian tres cosas:
+
+- Las columnas calculadas usan `[Columna]` en lugar de `` `Columna` ``.
+- El contenido de las evidencias va en `varbinary(max)` en lugar de `mediumblob`.
+- La unicidad condicional cambia de forma. MySQL usa un índice único sobre una columna calculada `CASE WHEN condición THEN Columna END`. SQL Server no permite filtrar por una columna calculada, así que ahí es un índice único filtrado sobre la columna real, `... WHERE condición`. Por ejemplo, una sola recepción CONFIRMADA por entrega: `UNIQUE (EntregaId) WHERE [Estado] = 'CONFIRMADA'`.
 
 **1. Configurar la conexión local** con user-secrets, sin dejar credenciales en el repositorio. Las cadenas son ejemplos, no credenciales reales:
 
