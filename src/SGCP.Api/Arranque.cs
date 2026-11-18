@@ -21,7 +21,7 @@ public static class Arranque
     {
         var b = WebApplication.CreateBuilder(new WebApplicationOptions { Args = args, ApplicationName = typeof(Arranque).Assembly.FullName });
         b.Configuration.AddJsonFile("appsettings.Local.json", optional: true).AddEnvironmentVariables();
-        b.Services.AddDbContext<SgcpContext>(o => o.UseMySQL(CadenaConexion.Exigir(b.Configuration)));
+        ConfiguracionBaseDatos.AgregarContexto(b.Services, b.Configuration);
         b.Services.AddHttpContextAccessor();
         b.Services.AddScoped<ActorActual>();
         b.Services.AddScoped<GeneradorToken>();

@@ -12,18 +12,27 @@ using SGCP.Api.Datos;
 
 var archivo = Path.Combine(Path.GetTempPath(), "sgcp-pruebas-" + Guid.NewGuid() + ".db");
 var sql = Environment.GetEnvironmentVariable("SGCP_MYSQL_TEST");
+// SGCP_SQLSERVER_TEST: misma verificación contra SQL Server (migraciones de Datos/MigracionesSqlServer).
+var sqlServer = Environment.GetEnvironmentVariable("SGCP_SQLSERVER_TEST");
+if (sql is not null && sqlServer is not null)
+    throw new InvalidOperationException("Configura SGCP_MYSQL_TEST o SGCP_SQLSERVER_TEST, no ambas.");
 var servidor = args.Contains("--servidor");
 if (sql is not null && !servidor && !args.Contains("--solo-sprint1"))
     await MigracionHistorica.Verificar(sql);
 var puerto = servidor ? 5091 : 5093;
-var cadena = sql is null ? null : new MySqlConnectionStringBuilder(sql) { Database = "sgcp_pruebas_" + Guid.NewGuid().ToString("N") }.ConnectionString;
+var cadena = sqlServer is not null
+    ? new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(sqlServer) { InitialCatalog = "sgcp_pruebas_" + Guid.NewGuid().ToString("N") }.ConnectionString
+    : sql is null ? null : new MySqlConnectionStringBuilder(sql) { Database = "sgcp_pruebas_" + Guid.NewGuid().ToString("N") }.ConnectionString;
 var app = Arranque.Crear(["--environment", "Testing", "--urls", $"http://127.0.0.1:{puerto}"], b =>
 {
     b.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Jwt:Clave"] = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)), ["Jwt:Emisor"] = "SGCPapi", ["Jwt:Audiencia"] = "SGCPclientes", ["DatosIniciales:ClaveAdministrador"] = "Prueba-local-2026!", ["DatosIniciales:Ejemplos"] = "true", ["DatosIniciales:Habilitar"] = "false", ["Recuperacion:CarpetaLocal"] = archivo + "-correos", ["Logging:LogLevel:Default"] = "Warning" });
     b.Services.RemoveAll<SgcpContext>();
     b.Services.RemoveAll<DbContextOptions<SgcpContext>>();
     b.Services.RemoveAll<IDbContextOptionsConfiguration<SgcpContext>>();
-    b.Services.AddDbContext<SgcpContext>(o => { if (cadena is null) o.UseSqlite("Data Source=" + archivo); else o.UseMySQL(cadena); });
+    if (sqlServer is not null)
+        b.Services.AddDbContext<SgcpContext, SgcpContextSqlServer>(o => o.UseSqlServer(cadena!));
+    else
+        b.Services.AddDbContext<SgcpContext>(o => { if (cadena is null) o.UseSqlite("Data Source=" + archivo); else o.UseMySQL(cadena); });
 });
 await using (var scope = app.Services.CreateAsyncScope())
 {
@@ -41,7 +50,9 @@ await using (var scope = app.Services.CreateAsyncScope())
 }
 await app.StartAsync();
 Console.WriteLine("Cultura de verificación: " + System.Globalization.CultureInfo.CurrentCulture.Name);
-Console.WriteLine(cadena is null ? "Motor de pruebas: SQLite aislado. No valida la ejecución de migraciones MySQL." : "Motor de pruebas: MySQL, migración aplicada en una base aislada.");
+Console.WriteLine(cadena is null ? "Motor de pruebas: SQLite aislado. No valida la ejecución de migraciones."
+    : sqlServer is not null ? "Motor de pruebas: SQL Server, migración aplicada en una base aislada."
+    : "Motor de pruebas: MySQL, migración aplicada en una base aislada.");
 if (servidor) { Console.WriteLine("Servidor de verificación disponible en http://127.0.0.1:5091"); await app.WaitForShutdownAsync(); return; }
 using var http = new HttpClient { BaseAddress = new Uri($"http://127.0.0.1:{puerto}/api/v1/") };
 var cuenta = 0;
