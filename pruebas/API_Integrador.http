@@ -1,3 +1,4 @@
+### 1 · POST auth/login → 200
 # Web III · W3-P4 · Victor Manuel Manrique Arancivia
 #
 # Visual Studio
@@ -18,7 +19,6 @@
 # Los registros del recorrido quedan en la base para comprobar la persistencia.
 # Ejecuta el archivo contra una base de desarrollo destinada a estas pruebas.
 
-### 1 · POST auth/login → 200
 # Comprobar que la respuesta contiene token y expira.
 # Cada cabecera Authorization toma el JWT directamente de esta respuesta.
 # @name login
