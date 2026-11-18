@@ -79,8 +79,12 @@ public class CotizacionesController(ServicioCotizaciones servicio, SgcpContext d
     }
     [HttpPost,
             Authorize(Policy = "cotizaciones.administrar")]
-    public async Task<IActionResult> Crear(CotizacionPeticion p) => StatusCode(201,
-            new { Id = await servicio.Guardar(null, p) });
+    public async Task<IActionResult> Crear(CotizacionPeticion p)
+    {
+        var id = await servicio.Guardar(null, p);
+        // 201 con Location: GET cotizaciones/{id}.
+        return CreatedAtAction(nameof(Ver), new { id }, new { Id = id });
+    }
     [HttpPut("{id:guid}"),
             Authorize(Policy = "cotizaciones.administrar")]
     public async Task<IActionResult> Editar(Guid id,

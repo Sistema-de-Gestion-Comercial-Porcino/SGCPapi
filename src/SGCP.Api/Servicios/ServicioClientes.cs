@@ -42,6 +42,23 @@ public class ServicioClientes(SgcpContext db, UnidadTrabajo unidad, ServicioAudi
         auditoria.Registrar(activo ? "ACTIVAR" : "DESACTIVAR", "Cliente", id);
         return true;
     });
+    /// <summary>
+    /// Borrado físico solo sin historial. Un cliente con cotizaciones, pedidos, pagos o cuenta de comprador se desactiva:
+    /// borrarlo dejaría saldos y pagos sin dueño y rompería su trazabilidad.
+    /// </summary>
+    public Task<bool> Eliminar(Guid id) => unidad.Ejecutar(async () =>
+    {
+        var c = await db.Clientes.FindAsync(id) ?? throw new ReglaException("NO_ENCONTRADO", "Cliente no encontrado.", 404);
+        if (await db.Cotizaciones.AnyAsync(x => x.ClienteId == id)
+            || await db.Pedidos.AnyAsync(x => x.ClienteId == id)
+            || await db.Pagos.AnyAsync(x => x.ClienteId == id)
+            || await db.Usuarios.AnyAsync(x => x.ClienteId == id))
+            throw new ReglaException("CLIENTE_CON_HISTORIAL",
+                "El cliente tiene cotizaciones, pedidos, pagos o una cuenta de comprador. Desactívalo en lugar de borrarlo.", 409);
+        db.Clientes.Remove(c);
+        auditoria.Registrar("ELIMINAR_CLIENTE", "Cliente", id);
+        return true;
+    });
     public async Task VerificarDependenciasAsync(Guid id)
     {
         var ahora = DateTime.UtcNow;
