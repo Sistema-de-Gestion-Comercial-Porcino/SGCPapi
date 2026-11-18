@@ -139,11 +139,19 @@ public static class Arranque
         b.Services.AddEndpointsApiExplorer();
         b.Services.AddSwaggerGen(o =>
         {
+            var archivoXml = $"{typeof(Arranque).Assembly.GetName().Name}.xml";
+            o.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, archivoXml));
             o.SwaggerDoc("v1",
                 new()
                 {
-                    Title = "SGCP · API comercial",
-                    Version = "v1"
+                    Title = "SGCP · Sistema de Gestión Comercial Porcino",
+                    Version = "v1",
+                    Description = "API para gestionar clientes, catálogo, cotizaciones, pedidos, producción, inventario, cobranza y entregas. Usa un token JWT para acceder a las operaciones protegidas.",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Equipo SGCP",
+                        Url = new Uri("https://github.com/Sistema-de-Gestion-Comercial-Porcino/SGCPapi")
+                    }
                 });
             o.AddSecurityDefinition("Bearer",
                 new OpenApiSecurityScheme

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SGCP.Api.Comun;
 using SGCP.Api.Contratos.Peticiones;
+using SGCP.Api.Contratos.Respuestas;
 using SGCP.Api.Datos;
 using SGCP.Api.Dominio.Enumeraciones;
 using SGCP.Api.Seguridad;
@@ -10,9 +11,20 @@ using SGCP.Api.Servicios;
 namespace SGCP.Api.Controllers;
 
 [ApiController, Route("api/v1/pedidos"), Authorize(Policy = "pedidos.consultar")]
+[ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status403Forbidden)]
 public class PedidosController(SgcpContext db, ServicioConfirmarPedido servicio, ActorActual actor) : ControllerBase
 {
+    /// <summary>Lista los pedidos visibles para la sesión con filtros y paginación.</summary>
+    /// <param name="busqueda">Código de pedido o nombre del cliente.</param>
+    /// <param name="estadoComercial">Estado comercial del pedido.</param>
+    /// <param name="clienteId">Identificador del cliente.</param>
+    /// <param name="pagina">Número de página desde 1.</param>
+    /// <param name="tamanoPagina">Cantidad por página. Admite 10, 20, 50 o 100.</param>
+    /// <response code="400">Un filtro o la paginación no tiene un valor válido.</response>
     [HttpGet]
+    [ProducesResponseType(typeof(ResultadoPaginado<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Listar(string? busqueda,
             EstadoComercial? estadoComercial,
             Guid? clienteId,
@@ -40,7 +52,13 @@ public class PedidosController(SgcpContext db, ServicioConfirmarPedido servicio,
             Cliente = x.Cliente.Nombre
         }).Paginar(pagina, tamanoPagina));
     }
+    /// <summary>Consulta el pedido, sus productos y su total. Los costos requieren permiso adicional.</summary>
+    /// <param name="id">Identificador del pedido.</param>
+    /// <response code="403">Falta permiso o el pedido pertenece a otro comprador.</response>
+    /// <response code="404">El pedido no existe.</response>
     [HttpGet("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Ver(Guid id)
     {
         var p = await db.Pedidos.AsNoTracking()
@@ -83,15 +101,35 @@ public class PedidosController(SgcpContext db, ServicioConfirmarPedido servicio,
             })
         });
     }
+    /// <summary>Confirma un pedido a partir de una cotización aceptada y vigente.</summary>
+    /// <param name="p">Cotización, fecha comprometida y condición de pago.</param>
+    /// <response code="201">Devuelve el identificador del pedido creado.</response>
+    /// <response code="400">Datos inválidos, fecha o detalles incompletos.</response>
+    /// <response code="404">La cotización no existe.</response>
+    /// <response code="409">La cotización, el cliente o los productos no cumplen las condiciones de confirmación.</response>
     [HttpPost,
             Authorize(Policy = "pedidos.administrar")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Confirmar(PedidoPeticion p) => StatusCode(201,
             new
             {
                 Id = await servicio.ConfirmarAsync(p)
             });
+    /// <summary>Cancela un pedido confirmado y registra el motivo.</summary>
+    /// <param name="id">Identificador del pedido.</param>
+    /// <param name="p">Motivo de la cancelación.</param>
+    /// <response code="400">Falta el motivo o no es válido.</response>
+    /// <response code="404">El pedido no existe.</response>
+    /// <response code="409">El estado, el despacho o una seña pendiente de acuerdo impiden cancelar el pedido.</response>
     [HttpPost("{id:guid}/cancelar"),
             Authorize(Policy = "pedidos.administrar")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Cancelar(Guid id,
             MotivoPeticion p)
     {
