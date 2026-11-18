@@ -54,7 +54,7 @@ MySQL no tiene autenticación integrada de Windows: siempre hay usuario y contra
 Si el usuario SQL no puede crear bases, crea previamente `sgcp`; la migración construye las tablas. En PowerShell 7, `./scripts/Preparar-Desarrollo.ps1` pide los valores sin mostrarlos, guarda secretos y ejecuta la migración. Si usas Visual Studio/PowerShell anterior, configura las claves con el administrador de secretos del proyecto.
 
 ```bash
-dotnet ef database update --project src/SGCP.Api
+dotnet ef database update --project src/SGCP.Api --context SgcpContext
 dotnet run --project src/SGCP.Api
 ```
 
@@ -70,6 +70,8 @@ La API funciona con **MySQL 8** (valor por defecto) o con **SQL Server 2019 o po
 |---|---|---|---|
 | MySQL 8 | `MySql` (o vacío) | `SgcpContext` | `src/SGCP.Api/Datos/Migraciones/` |
 | SQL Server | `SqlServer` | `SgcpContextSqlServer` | `src/SGCP.Api/Datos/MigracionesSqlServer/` |
+
+**Como hay dos contextos, todo comando `dotnet ef` lleva `--context`:** `SgcpContext` para MySQL y `SgcpContextSqlServer` para SQL Server. Sin él, EF responde «More than one DbContext was found».
 
 El modelo es el mismo. Solo cambian tres cosas:
 
@@ -125,8 +127,8 @@ No uses `--idempotent` con MySQL: EF genera `IF NOT EXISTS(...) BEGIN ... END`, 
 
 ```bash
 dotnet build --warnaserror
-dotnet ef migrations has-pending-model-changes --project src/SGCP.Api
-dotnet ef migrations script --project src/SGCP.Api --output artifacts/EsquemaCompleto.sql
+dotnet ef migrations has-pending-model-changes --project src/SGCP.Api --context SgcpContext
+dotnet ef migrations script --project src/SGCP.Api --context SgcpContext --output artifacts/EsquemaCompleto.sql
 dotnet run --project tests/SGCP.Verificacion
 ```
 
