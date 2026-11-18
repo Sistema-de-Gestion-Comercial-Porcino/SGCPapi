@@ -1,0 +1,288 @@
+# Web III · W3-P4 · Victor Manuel Manrique Arancivia
+#
+# Visual Studio
+# 1. Ejecuta SGCP.Api con Ctrl+F5 y abre este archivo con Ctrl+O.
+# 2. Selecciona el entorno "local" en la barra superior del editor HTTP.
+# 3. Configura tu contraseña en http-client.env.json.user, junto a este archivo.
+#    Usa este contenido y reemplaza el valor de ejemplo por tu contraseña local.
+#    { "local": { "claveAdministrador": "TU_CLAVE_LOCAL" } }
+#    Ese archivo termina en .user y está excluido de Git.
+# 4. Pulsa "Enviar solicitud" en cada bloque, de arriba hacia abajo, incluidas
+#    las preparaciones. Los comentarios indican el resultado que debes comprobar.
+# 5. Antes del paso 12, detén y vuelve a iniciar SGCP.Api con la misma base.
+#    Conserva abierto este archivo para reutilizar las respuestas de esta sesión.
+#    Si caduca el token, vuelve a ejecutar solo el paso 1 y después el paso 12.
+#
+# Las cantidades y los importes son datos sintéticos de prueba.
+# Cada recorrido crea su propio catálogo, cotización, pedido y cliente.
+# Los registros del recorrido quedan en la base para comprobar la persistencia.
+# Ejecuta el archivo contra una base de desarrollo destinada a estas pruebas.
+
+@token = {{login.response.body.$.token}}
+@clienteId = {{crearCliente.response.body.$.id}}
+@productoId = {{crearProducto.response.body.$.id}}
+@cotizacionId = {{crearCotizacion.response.body.$.id}}
+
+### 1 · POST auth/login → 200
+# Comprobar que la respuesta contiene token y expira.
+# La variable token reutiliza el JWT que devuelve esta solicitud.
+# @name login
+POST {{api}}/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "login": "{{usuarioAdministrador}}",
+  "clave": "{{claveAdministrador}}"
+}
+
+### 2 · GET clientes → 200
+# Comprobar elementos, pagina, tamanoPagina, totalRegistros y totalPaginas.
+# @name listarClientes
+GET {{api}}/clientes?pagina=1&tamanoPagina=20
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### 3 · POST clientes válido → 201 con Location
+# Guardar la respuesta. El cliente creado se usa hasta el paso 12.
+# Comprobar id, nombre, fechaAlta y la cabecera Location.
+# @name crearCliente
+POST {{api}}/clientes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Cliente prueba Web III",
+  "tipo": "Prueba",
+  "telefono": "70000000",
+  "direccion": "Direccion sintetica Web III",
+  "identificacionFiscal": "",
+  "condicionHabitual": "CONTADO",
+  "observaciones": "W3-P4. Registro sintetico para el recorrido HTTP."
+}
+
+### 4 · GET clientes/{id} usando Location → 200
+# Comprobar que id coincide con el del paso 3.
+# @name consultarPorLocation
+GET {{crearCliente.response.headers.Location}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### 5 · POST clientes sin nombre → 400
+# Comprobar codigo DATOS_INVALIDOS y el detalle del campo Nombre.
+# @name clienteSinNombre
+POST {{api}}/clientes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "tipo": "Prueba",
+  "telefono": "70000000",
+  "direccion": "Direccion sintetica Web III",
+  "identificacionFiscal": "",
+  "condicionHabitual": "CONTADO",
+  "observaciones": "Solicitud con el nombre omitido."
+}
+
+### Preparación A · POST clasificaciones → 201
+# Los códigos con timestamp permiten repetir el recorrido.
+# @name crearClasificacion
+POST {{api}}/clasificaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "codigo": "W3-{{$timestamp}}",
+  "nombre": "Clasificacion sintetica Web III",
+  "familia": "CARNE_FRESCA",
+  "descripcion": "Dato sintetico para pruebas W3-P4."
+}
+
+### Preparación B · POST productos → 201 con Location
+# Crear el catálogo no crea existencias físicas.
+# @name crearProducto
+POST {{api}}/productos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "codigo": "W3-{{$timestamp}}",
+  "nombre": "Producto sintetico Web III",
+  "presentacion": "Presentacion de prueba",
+  "unidadVenta": "kg",
+  "descripcion": "Dato sintetico para pruebas W3-P4.",
+  "clasificacionProductoId": "{{crearClasificacion.response.body.$.id}}"
+}
+
+### Preparación C · POST productos/{id}/precios → 201
+# Costo 1 y precio 2 son valores sintéticos para comprobar el recorrido.
+# @name crearPrecio
+POST {{api}}/productos/{{productoId}}/precios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "costoReferencia": 1,
+  "precioVenta": 2,
+  "vigenteDesde": "{{$datetime iso8601 -1 d}}",
+  "confirmarMargenNoPositivo": false
+}
+
+### 6 · POST cotizaciones con clienteId inexistente → 400
+# El GUID vacío no corresponde a un cliente creado por la API.
+# El producto de esta solicitud ya tiene precio vigente.
+# Comprobar codigo CLIENTE_NO_ACTIVO y que la solicitud no crea una cotización.
+# @name cotizacionClienteInexistente
+POST {{api}}/cotizaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "clienteId": "00000000-0000-0000-0000-000000000000",
+  "canal": "LOCAL",
+  "vigenteHasta": "{{$datetime iso8601 1 d}}",
+  "detalles": [
+    {
+      "productoId": "{{productoId}}",
+      "cantidad": 1,
+      "unidad": "kg",
+      "precioUnitario": 2
+    }
+  ]
+}
+
+### 7 · PUT clientes/{id} → 200
+# Comprobar el mismo id, nombre actualizado y observaciones.
+# @name editarCliente
+PUT {{api}}/clientes/{{clienteId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Cliente prueba Web III editado",
+  "tipo": "Prueba",
+  "telefono": "70000001",
+  "direccion": "Direccion sintetica Web III",
+  "identificacionFiscal": "",
+  "condicionHabitual": "CONTADO",
+  "observaciones": "W3-P4. Datos actualizados en el paso 7."
+}
+
+### Preparación D · POST cotizaciones del cliente del paso 3 → 201 con Location
+# Comprobar id y Location. Esta cotización constituye historial del cliente.
+# @name crearCotizacion
+POST {{api}}/cotizaciones
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "clienteId": "{{clienteId}}",
+  "canal": "LOCAL",
+  "vigenteHasta": "{{$datetime iso8601 1 d}}",
+  "detalles": [
+    {
+      "productoId": "{{productoId}}",
+      "cantidad": 1,
+      "unidad": "kg",
+      "precioUnitario": 2
+    }
+  ]
+}
+
+### Preparación E · POST cotizaciones/{id}/presentar → 204
+# @name presentarCotizacion
+POST {{api}}/cotizaciones/{{cotizacionId}}/presentar
+Authorization: Bearer {{token}}
+
+### Preparación F · POST cotizaciones/{id}/aceptar → 204
+# La aceptación vigente habilita la confirmación del pedido.
+# @name aceptarCotizacion
+POST {{api}}/cotizaciones/{{cotizacionId}}/aceptar
+Authorization: Bearer {{token}}
+
+### Preparación G · POST pedidos → 201
+# Guardar id para comprobar que aparece en el recurso relacionado.
+# @name confirmarPedido
+POST {{api}}/pedidos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "cotizacionId": "{{cotizacionId}}",
+  "fechaComprometida": "{{$datetime iso8601 2 d}}",
+  "condicionPago": "CONTADO"
+}
+
+### 8 · GET clientes/{id}/pedidos → 200
+# Comprobar que elementos contiene el id devuelto por confirmarPedido.
+# El pedido debe tener codigo, fecha, estadoComercial CONFIRMADO y total 2.
+# @name consultarPedidos
+GET {{api}}/clientes/{{clienteId}}/pedidos?pagina=1&tamanoPagina=20
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### 9 · GET clientes/{guid inexistente} → 404
+# Comprobar codigo NO_ENCONTRADO.
+# @name clienteInexistente
+GET {{api}}/clientes/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### 10 · DELETE clientes/{id} con historial → 409
+# Comprobar codigo CLIENTE_CON_HISTORIAL.
+# El cliente del paso 3 conserva su cotización y pedido.
+# @name borrarClienteConHistorial
+DELETE {{api}}/clientes/{{clienteId}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### Preparación H · POST otro cliente sin historial → 201 con Location
+# Este segundo cliente se elimina en el paso 11.
+# @name crearClienteEliminable
+POST {{api}}/clientes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "nombre": "Cliente eliminable prueba Web III",
+  "tipo": "Prueba",
+  "telefono": "70000002",
+  "direccion": "Direccion sintetica Web III",
+  "identificacionFiscal": "",
+  "condicionHabitual": "CONTADO",
+  "observaciones": "W3-P4. Cliente creado para el DELETE sin historial."
+}
+
+### 11 · DELETE clientes/{id} sin historial → 204
+# Comprobar que el cuerpo está vacío.
+# @name borrarClienteSinHistorial
+DELETE {{api}}/clientes/{{crearClienteEliminable.response.body.$.id}}
+Authorization: Bearer {{token}}
+
+### Comprobación del paso 11 · GET cliente eliminado → 404
+# Comprobar codigo NO_ENCONTRADO.
+# @name consultarClienteEliminado
+GET {{crearClienteEliminable.response.headers.Location}}
+Authorization: Bearer {{token}}
+Accept: application/json
+
+### 12 · Persistencia tras detener y volver a iniciar la API · GET clientes/{id} → 200
+# PAUSA. Detén SGCP.Api y vuelve a iniciarla con la MISMA base de datos.
+# Mantén abierto este archivo. Ejecuta este bloque después del reinicio.
+# Comprobar id y fechaAlta del paso 3, y nombre, teléfono y observaciones del 7.
+# Debe conservar "Cliente prueba Web III editado" y el teléfono "70000001".
+# Si responde 401 por vencimiento, ejecuta solo el login del paso 1 y reintenta.
+# @name comprobarPersistencia
+GET {{crearCliente.response.headers.Location}}
+Authorization: Bearer {{token}}
+Accept: application/json
