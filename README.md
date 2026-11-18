@@ -164,6 +164,7 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v4.1.1 | 2026-11-18 | 4 | Corrección pedida por la web (S3/S4-P2): `GET recepciones/conflictos` y `GET recepciones/{id}` devuelven la versión y el estado actuales de la entrega, para que Ventas revise conflictos sin `entregas.administrar`; el reporte ENTREGAS trae la columna «Entrega» con el id, y `GET pedidos/{pedidoId}/constancia` emite la constancia a Ventas y al comprador conociendo solo el pedido | Dario Haziel Tambo Parra |
 | v4.1.0 | 2026-11-07 | 2, 3 y 4 | Parte de API de los tres sprints (S2-P1, S3-P1, S4-P1): producción, sanidad, lotes, pesajes, inventario, reservas y frío; pagos, señas, saldos, transportes, entregas y sincronización con evidencias; reportes por perfil con exportación PDF y Excel, constancia y Adapter fiscal sin proveedor. Patrones Factory Method, Strategy, Facade y Adapter | Dario Haziel Tambo Parra |
 | v1.0.1 | 2026-11-07 | 1 | Corrección: el esquema de versiones aclara que MENOR es el número de parte y que la etiqueta de cierre del sprint es `vN.4.0` | Dario Haziel Tambo Parra |
 | v1.0.0 | 2026-11-06 | 1 | Corrección: la fábrica de contexto de diseño ya no exige credenciales, de modo que el flujo de CI genera y revisa migraciones sin configurarlas | Dario Haziel Tambo Parra |
@@ -237,9 +238,9 @@ Todas requieren JWT. Swagger muestra los DTO, tipos y enumeraciones. Los listado
 | Transporte | `GET/POST transportes`, `PUT transportes/{id}`, `POST transportes/{id}/estado`, `GET responsables-entrega` |
 | Rutas | `GET/POST rutas`, `POST rutas/{id}/finalizar` |
 | Entregas | `GET/POST entregas`, `POST entregas/{id}/despachar`, `reasignar`, `GET mis-entregas` |
-| Recepción | `POST recepciones/sincronizar`, `GET recepciones/{id}`, `GET recepciones/conflictos`, `POST recepciones/{id}/revisar`, `GET recepciones/{id}/evidencias/{evidenciaId}` |
+| Recepción | `POST recepciones/sincronizar`, `GET recepciones/{id}` (incluye `entrega.version`), `GET recepciones/conflictos` (incluye `versionEntrega`, `estadoEntrega` y `pedido`), `POST recepciones/{id}/revisar` (`versionActual` = la versión leída), `GET recepciones/{id}/evidencias/{evidenciaId}` |
 | Reportes | `GET reportes` devuelve tipos permitidos; `GET reportes/{tipo}`, `GET reportes/{tipo}/exportar/pdf`, `.../xlsx` |
-| Constancia | `GET entregas/{id}/constancia`: PDF con receptor, peso/unidad, fechas UTC, saldo histórico, hashes y evidencia gráfica; solo recepción conforme confirmada y acceso de administración/ventas o comprador propio |
+| Constancia | `GET entregas/{id}/constancia` o `GET pedidos/{pedidoId}/constancia` (toma la entrega ENTREGADA más reciente del pedido; el id de la entrega también sale en el reporte ENTREGAS): PDF con receptor, peso/unidad, fechas UTC, saldo histórico, hashes y evidencia gráfica; solo recepción conforme confirmada y acceso de administración/ventas o comprador propio |
 | Fiscal condicional | `GET/POST pedidos/{pedidoId}/registro-fiscal`: referencia estable, estado SIN_PROVEEDOR, sin emisión fiscal real |
 
 ### Reglas de operación y migración
