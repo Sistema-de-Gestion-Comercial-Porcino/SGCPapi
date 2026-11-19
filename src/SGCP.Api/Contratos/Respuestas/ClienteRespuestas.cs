@@ -13,10 +13,11 @@ public record ClienteRespuesta(
     FormaPago CondicionHabitual,
     bool Activo,
     DateTime FechaAlta,
-    string Observaciones)
+    string Observaciones,
+    string TipoDocumento)
 {
     public static ClienteRespuesta Desde(Cliente c) =>
-        new(c.Id, c.Nombre, c.Tipo, c.IdentificacionFiscal, c.Telefono, c.Direccion, c.CondicionHabitual, c.Activo, c.FechaAlta, c.Observaciones);
+        new(c.Id, c.Nombre, c.Tipo, c.IdentificacionFiscal, c.Telefono, c.Direccion, c.CondicionHabitual, c.Activo, c.FechaAlta, c.Observaciones, c.TipoDocumento);
 }
 
 /// <summary>Resumen de un pedido dentro de GET clientes/{id}/pedidos.</summary>

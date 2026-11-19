@@ -17,13 +17,16 @@ public class ServicioClientes(SgcpContext db, UnidadTrabajo unidad, ServicioAudi
         c.Tipo = p.Tipo.Trim();
         c.Telefono = p.Telefono.Trim();
         c.Direccion = p.Direccion?.Trim() ?? "";
-        c.IdentificacionFiscal = p.IdentificacionFiscal?.Trim().ToUpperInvariant() ?? "";
+        var documento = System.Text.RegularExpressions.Regex.Replace(p.IdentificacionFiscal?.Trim().ToUpperInvariant() ?? "", @"\s+", "");
+        if (id is not null && (c.IdentificacionFiscal != documento || c.TipoDocumento != p.TipoDocumento))
+            auditoria.Registrar("CORREGIR_DOCUMENTO", "Cliente", c.Id);
+        c.IdentificacionFiscal = documento;
+        c.TipoDocumento = p.TipoDocumento;
         c.CondicionHabitual = p.CondicionHabitual;
         c.Observaciones = p.Observaciones ?? "";
-        if (c.Activo
-            && c.IdentificacionFiscal != ""
-            && await db.Clientes.AnyAsync(x => x.Id != c.Id && x.Activo && x.IdentificacionFiscal == c.IdentificacionFiscal))
-            throw new ReglaException("CLIENTE_DUPLICADO", "Ya existe un cliente activo con esa identificación.");
+        if (c.IdentificacionFiscal != ""
+            && await db.Clientes.AnyAsync(x => x.Id != c.Id && x.IdentificacionFiscal == c.IdentificacionFiscal))
+            throw new ReglaException("CLIENTE_DUPLICADO", "Ya existe un cliente con ese documento; revisa también los desactivados.");
         if (id is null)
             db.Clientes.Add(c);
         auditoria.Registrar(id is null ? "CREAR" : "EDITAR", "Cliente", c.Id);

@@ -14,11 +14,12 @@ public class ClienteConfiguration : IEntityTypeConfiguration<Cliente>
         b.Property(x => x.Telefono).HasMaxLength(30);
         b.Property(x => x.Direccion).HasMaxLength(250);
         b.Property(x => x.IdentificacionFiscal).HasMaxLength(40);
+        b.Property(x => x.TipoDocumento).HasMaxLength(20).HasDefaultValue("SIN_ESPECIFICAR");
         b.Property(x => x.Observaciones).HasMaxLength(500);
         b.Property(x => x.CondicionHabitual).HasConversion<string>().HasMaxLength(20);
         b.Property<string>("IdentificacionFiscalUnica")
             .HasMaxLength(40)
-            .HasComputedColumnSql("CASE WHEN `Activo` = 1 AND `IdentificacionFiscal` <> '' THEN `IdentificacionFiscal` ELSE NULL END", stored: true);
+            .HasComputedColumnSql("CASE WHEN `IdentificacionFiscal` <> '' THEN `IdentificacionFiscal` ELSE NULL END", stored: true);
         b.HasIndex("IdentificacionFiscalUnica").IsUnique();
     }
 }

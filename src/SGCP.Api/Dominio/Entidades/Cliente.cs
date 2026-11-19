@@ -9,6 +9,7 @@ public class Cliente
     public string Telefono { get; set; } = string.Empty;
     public string Direccion { get; set; } = string.Empty;
     public string IdentificacionFiscal { get; set; } = string.Empty;
+    public string TipoDocumento { get; set; } = "SIN_ESPECIFICAR";
     public FormaPago CondicionHabitual { get; set; } = FormaPago.CONTADO;
     public bool Activo { get; set; } = true;
     public DateTime FechaAlta { get; set; }

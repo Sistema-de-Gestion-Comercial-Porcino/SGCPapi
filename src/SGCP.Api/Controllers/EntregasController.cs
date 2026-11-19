@@ -29,11 +29,11 @@ public class EntregasController(SgcpContext db, ServicioEntregas servicio, SGCP.
     }
     [HttpGet("responsables-entrega")]
     public async Task<IActionResult> Responsables() => Ok(await db.Usuarios.AsNoTracking()
-        .Where(x => x.Estado == EstadoUsuario.ACTIVO && x.Roles.Any(r => r.Nombre == "ENTREGA" || r.Nombre == "ADMINISTRACION"))
+        .Where(x => x.Estado == EstadoUsuario.ACTIVO && x.Roles.Any(r => r.Nombre == "ENTREGA" || r.Nombre == "SUPERADMIN" || r.Nombre == "PROPIETARIO" || r.Nombre == "ADMINISTRADOR"))
         .Select(x => new { x.Id, x.Nombre }).ToListAsync());
     [HttpGet("rutas")]
     public async Task<IActionResult> Rutas(int pagina = 1, int tamanoPagina = 20) => Ok(await db.Rutas.AsNoTracking()
-        .Where(x => actor.Principal.IsInRole("ADMINISTRACION") || x.ResponsableId == actor.Id)
+        .Where(x => actor.GestionGlobal || actor.Principal.IsInRole("ADMINISTRADOR") || x.ResponsableId == actor.Id)
         .OrderByDescending(x => x.Fecha).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
     [HttpPost("rutas")]
     public async Task<IActionResult> Ruta(RutaPeticion p) => StatusCode(201, new { Id = await servicio.CrearRuta(p) });
@@ -45,7 +45,7 @@ public class EntregasController(SgcpContext db, ServicioEntregas servicio, SGCP.
     }
     [HttpGet("entregas")]
     public async Task<IActionResult> Entregas(int pagina = 1, int tamanoPagina = 20) => Ok(await db.Entregas.AsNoTracking()
-        .Where(x => actor.Principal.IsInRole("ADMINISTRACION") || x.ResponsableId == actor.Id)
+        .Where(x => actor.GestionGlobal || actor.Principal.IsInRole("ADMINISTRADOR") || x.ResponsableId == actor.Id)
         .OrderByDescending(x => x.FechaPrevista).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
     [HttpPost("entregas")]
     public async Task<IActionResult> Preparar(EntregaPeticion p) => StatusCode(201, new { Id = await servicio.Preparar(p) });

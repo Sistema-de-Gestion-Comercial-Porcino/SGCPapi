@@ -23,7 +23,13 @@ public static class DatosIniciales
         var permisos = await db.Permisos.ToListAsync();
         Dictionary<string, string[]> roles = new()
         {
-            ["ADMINISTRACION"] = Permisos.Todos,
+            ["SUPERADMIN"] = Permisos.Todos,
+            ["PROPIETARIO"] = Permisos.Todos,
+            ["ADMINISTRADOR"] = ["usuarios.consultar", "usuarios.administrar", "clientes.consultar", "clientes.administrar",
+                "catalogo.consultar", "catalogo.administrar", "precios.consultar", "operacion.consultar",
+                "produccion.consultar", "produccion.administrar", "inventario.consultar", "inventario.administrar",
+                "frio.administrar", "entregas.administrar", "entregas.revisar", "reportes.consultar"],
+            ["FINANZAS"] = RolesSistema.Financieros,
             ["VENTAS"] = ["clientes.consultar", "clientes.administrar", "catalogo.consultar", "costos.consultar",
                 "precios.consultar", "cotizaciones.consultar", "cotizaciones.administrar", "cotizaciones.responder",
                 "pedidos.consultar", "pedidos.administrar", "cargos.administrar", "pagos.administrar", "saldos.consultar",
@@ -44,6 +50,29 @@ public static class DatosIniciales
             rol.Permisos = permisos.Where(x => codigos.Contains(x.Codigo)).ToList();
         }
         await db.SaveChangesAsync();
+        // Migración de datos idempotente: únicamente el admin inicial asciende a raíz.
+        var anterior = await db.Roles.Include(r => r.Permisos).SingleOrDefaultAsync(r => r.Nombre == "ADMINISTRACION");
+        if (anterior is { Activo: true })
+        {
+            var cuentas = await db.Usuarios.Include(u => u.Roles).Where(u => u.Roles.Any(r => r.Nombre == "ADMINISTRACION")).ToListAsync();
+            var raiz = await db.Roles.SingleAsync(r => r.Nombre == "SUPERADMIN");
+            var operador = await db.Roles.SingleAsync(r => r.Nombre == "ADMINISTRADOR");
+            var inicial = cuentas.SingleOrDefault(u => u.Login == "admin" && u.Estado == EstadoUsuario.ACTIVO);
+            if (inicial is null && !await db.Usuarios.AnyAsync(u => u.Estado == EstadoUsuario.ACTIVO && u.Roles.Any(r => r.Nombre == "SUPERADMIN")))
+                throw new InvalidOperationException("No se encontró la cuenta admin activa para migrar. Revisa las cuentas antes de continuar.");
+            foreach (var u in cuentas)
+            {
+                u.Roles.Remove(anterior);
+                var destino = u == inicial ? raiz : operador;
+                if (!u.Roles.Any(r => r.Id == destino.Id)) u.Roles.Add(destino);
+                db.RegistrosAuditoria.Add(new RegistroAuditoria { UsuarioId = inicial?.Id ?? u.Id, Entidad = "Usuario", EntidadId = u.Id,
+                    Operacion = "MIGRAR_ROL_" + destino.Nombre, Fecha = DateTime.UtcNow });
+            }
+            anterior.Activo = false;
+            anterior.Permisos.Clear();
+            foreach (var s in await db.Sesiones.Where(s => !s.Revocada).ToListAsync()) s.Revocada = true;
+            await db.SaveChangesAsync();
+        }
         if (!await db.Usuarios.AnyAsync())
         {
             var clave = config["DatosIniciales:ClaveAdministrador"];
@@ -55,7 +84,7 @@ public static class DatosIniciales
                 Login = "admin",
                 Correo = config["DatosIniciales:CorreoAdministrador"] ?? "admin@sgcp.local",
                 CreadoEn = DateTime.UtcNow,
-                Roles = [await db.Roles.SingleAsync(x => x.Nombre == "ADMINISTRACION")]
+                Roles = [await db.Roles.SingleAsync(x => x.Nombre == "SUPERADMIN")]
             };
             admin.HashClave = new PasswordHasher<Usuario>().HashPassword(admin, clave);
             db.Usuarios.Add(admin);

@@ -11,6 +11,14 @@ namespace SGCP.Api.Servicios;
 public class ServicioUsuarios(SgcpContext db, ActorActual actor, UnidadTrabajo unidad, ServicioAuditoria auditoria)
 {
     public IQueryable<Usuario> Consulta() => db.Usuarios.Include(x => x.Roles);
+    public bool PuedeGestionar(Usuario u) => actor.Principal.IsInRole("SUPERADMIN") ||
+        (u.Id != actor.Id && (actor.Principal.IsInRole("PROPIETARIO") || !u.Roles.Any(r => r.Activo && r.Nombre == "FINANZAS")) &&
+         RolesSistema.Nivel(actor.Principal) > u.Roles.Where(r => r.Activo).Select(r => RolesSistema.Nivel(r.Nombre)).DefaultIfEmpty(0).Max());
+    private void VerificarGestion(Usuario u)
+    {
+        if (!PuedeGestionar(u))
+            throw new ReglaException("JERARQUIA_ROLES", "No puedes modificar esta cuenta ni tus propios privilegios.", 403);
+    }
     public static object Vista(Usuario u) => new
     {
         u.Id,
@@ -28,6 +36,9 @@ public class ServicioUsuarios(SgcpContext db, ActorActual actor, UnidadTrabajo u
         var u = id is null ? new Usuario { CreadoEn = DateTime.UtcNow } : await Consulta()
             .SingleOrDefaultAsync(x => x.Id == id) ?? throw new ReglaException("NO_ENCONTRADO", "Usuario no encontrado.", 404);
         var roles = await db.Roles.Include(x => x.Permisos).Where(x => p.Roles.Contains(x.Id) && x.Activo).ToListAsync();
+        if (id is not null) VerificarGestion(u);
+        if (roles.Any(r => !RolesSistema.Asignable(actor.Principal, r.Nombre)) && u.ClienteId is null)
+            throw new ReglaException("JERARQUIA_ROLES", "No puedes asignar este nivel de acceso.", 403);
         if (roles.Count != p.Roles.Distinct().Count() || roles.Count == 0)
             throw new ReglaException("ROLES_INVALIDOS", "Selecciona responsabilidades habilitadas.", 400);
         if (roles.Any(x => x.Nombre == "COMPRADOR") && (id is null || u.ClienteId is null || roles.Count != 1))
@@ -36,12 +47,12 @@ public class ServicioUsuarios(SgcpContext db, ActorActual actor, UnidadTrabajo u
                     400);
         if (u.ClienteId is not null && roles.Any(x => x.Nombre != "COMPRADOR"))
             throw new ReglaException("CUENTA_COMPRADOR", "La cuenta comercial del comprador no puede convertirse en cuenta interna.");
-        if (roles.SelectMany(x => x.Permisos).Any(x => !actor.Tiene(x.Codigo)))
+        if (!actor.Tiene("usuarios.administrar") && roles.SelectMany(x => x.Permisos).Any(x => !actor.Tiene(x.Codigo)))
             throw new ReglaException("SIN_PERMISO", "No puedes asignar permisos que no posees.", 403);
         if (id is not null
             && u.Estado == EstadoUsuario.ACTIVO
-            && u.Roles.Any(x => x.Nombre == "ADMINISTRACION")
-            && !roles.Any(x => x.Nombre == "ADMINISTRACION"))
+            && u.Roles.Any(x => x.Nombre == "SUPERADMIN")
+            && !roles.Any(x => x.Nombre == "SUPERADMIN"))
             await ProtegerAdministrador(u.Id);
         u.Nombre = p.Nombre.Trim();
         u.Login = p.Login.Trim().ToLowerInvariant();
@@ -73,7 +84,8 @@ public class ServicioUsuarios(SgcpContext db, ActorActual actor, UnidadTrabajo u
     {
         var u = await Consulta()
             .SingleOrDefaultAsync(x => x.Id == id) ?? throw new ReglaException("NO_ENCONTRADO", "Usuario no encontrado.", 404);
-        if (u.Estado == EstadoUsuario.ACTIVO && estado != EstadoUsuario.ACTIVO && u.Roles.Any(x => x.Nombre == "ADMINISTRACION"))
+        VerificarGestion(u);
+        if (u.Estado == EstadoUsuario.ACTIVO && estado != EstadoUsuario.ACTIVO && u.Roles.Any(x => x.Nombre == "SUPERADMIN"))
             await ProtegerAdministrador(id);
         u.Estado = estado;
         if (estado == EstadoUsuario.ACTIVO)
@@ -87,7 +99,7 @@ public class ServicioUsuarios(SgcpContext db, ActorActual actor, UnidadTrabajo u
     {
         if (!await db.Usuarios.AnyAsync(x => x.Id != id
             && x.Estado == EstadoUsuario.ACTIVO
-            && x.Roles.Any(r => r.Nombre == "ADMINISTRACION" && r.Activo)))
-            throw new ReglaException("ULTIMO_ADMINISTRADOR", "Debe permanecer al menos un administrador habilitado.");
+            && x.Roles.Any(r => r.Nombre == "SUPERADMIN" && r.Activo)))
+            throw new ReglaException("ULTIMO_ADMINISTRADOR", "Debe permanecer al menos un superadmin habilitado.");
     }
 }

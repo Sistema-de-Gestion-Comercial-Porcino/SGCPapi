@@ -24,7 +24,8 @@ public record ClientePeticion([Required, MaxLength(120)] string Nombre,
         [MaxLength(250)] string Direccion,
         [MaxLength(40)] string IdentificacionFiscal,
         FormaPago CondicionHabitual,
-        [MaxLength(500)] string Observaciones);
+        [MaxLength(500)] string Observaciones,
+        [RegularExpression("CI|NIT|OTRO|SIN_ESPECIFICAR")] string TipoDocumento = "SIN_ESPECIFICAR");
 public record ClasificacionPeticion([Required, RegularExpression(@"[a-zA-Z0-9_-]{1,20}")] string Codigo,
         [Required, MaxLength(100)] string Nombre,
         TipoProducto Familia,

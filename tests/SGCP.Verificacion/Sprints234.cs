@@ -510,11 +510,15 @@ public static class Sprints234
             }
         }
         Token(ventas.Token);
-        var reporteEntregas = await Ok("GET", "reportes/ENTREGAS");
+        var reporteEntregas = await Ok("GET", "reportes/ENTREGAS?versionVista=2");
         var columnasEntregas = reporteEntregas["columnas"]!.AsArray().Select(x => x!.ToString()).ToList();
         var colEntrega = columnasEntregas.IndexOf("Entrega");
-        Check(colEntrega >= 0 && reporteEntregas["filas"]!.AsArray().Any(f => f![colEntrega]!.ToString() == entrega),
-            "Reporte ENTREGAS trae el id de la entrega para pedir la constancia");
+        Check(colEntrega < 0 && reporteEntregas["constancias"]!.AsArray().Any(x => x?.ToString() == entrega),
+            "Reporte ENTREGAS oculta el GUID y conserva la navegación a constancias");
+        var anterior = await Ok("GET", "reportes/ENTREGAS");
+        var columnaAnterior = anterior["columnas"]!.AsArray().ToList().FindIndex(c => c?.ToString() == "Entrega");
+        Check(columnaAnterior >= 0 && anterior["filas"]!.AsArray().Any(f => f![columnaAnterior]?.ToString() == entrega),
+            "API actualizada conserva el enlace de constancia para la web anterior");
         using (var porPedido = await http.GetAsync("pedidos/" + pedido + "/constancia"))
             Check(porPedido.IsSuccessStatusCode && (await porPedido.Content.ReadAsByteArrayAsync()).AsSpan(0, 4).SequenceEqual("%PDF"u8), "Ventas obtiene la constancia por pedido");
         Check(await Error("RECEPCION_PENDIENTE", "GET", "pedidos/" + pedidoAjeno + "/constancia"), "Pedido sin entrega confirmada no emite constancia");
@@ -689,8 +693,10 @@ public static class Sprints234
             var recepcionGuardada = await db.Recepciones.SingleAsync(x => x.Id == Guid.Parse(recepcion));
             Check(recepcionGuardada.SaldoPendienteAlConfirmar == 60.25m, "Constancia conserva saldo histórico de la confirmación");
             var auditoriaAntes = await db.RegistrosAuditoria.CountAsync();
+            var pedidosAntes = await db.Pedidos.CountAsync();
             await Ok("GET", "reportes/PEDIDOS");
-            Check(await db.RegistrosAuditoria.CountAsync() == auditoriaAntes, "Consultar reportes no escribe datos operativos ni auditoría");
+            Check(await db.RegistrosAuditoria.CountAsync() == auditoriaAntes + 1 && await db.Pedidos.CountAsync() == pedidosAntes,
+                "Consultar reportes registra acceso auditado sin alterar pedidos");
             var fuente = await db.Pedidos.Include(x => x.Detalles).FirstAsync(x => x.Id == Guid.Parse(pedido));
             for (var i = 0; i < 2000; i++)
             {

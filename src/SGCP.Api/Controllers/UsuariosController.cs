@@ -51,17 +51,17 @@ public class UsuariosController(ServicioUsuarios servicio) : ControllerBase
     { await servicio.Estado(id, p.Estado); return NoContent(); }
 }
 [ApiController, Authorize(Policy = "usuarios.consultar")]
-public class RolesController(SgcpContext db) : ControllerBase
+public class RolesController(SgcpContext db, ActorActual actor) : ControllerBase
 {
     [HttpGet("api/v1/roles")]
-    public async Task<IActionResult> Roles() => Ok(await db.Roles.OrderBy(x => x.Nombre).Select(x => new
+    public async Task<IActionResult> Roles(bool asignables = false) => Ok((await db.Roles.Where(x => x.Activo).OrderBy(x => x.Nombre).Select(x => new
     {
         x.Id,
         x.Nombre,
         x.Descripcion,
         x.Activo,
         Permisos = x.Permisos.Select(p => p.Codigo).ToArray()
-    }).ToListAsync());
+    }).ToListAsync()).Where(x => !asignables || RolesSistema.Asignable(actor.Principal, x.Nombre)));
     [HttpGet("api/v1/permisos")]
     public async Task<IActionResult> Permisos() => Ok(await db.Permisos.OrderBy(x => x.Codigo).Select(x => new
     {
@@ -71,7 +71,7 @@ public class RolesController(SgcpContext db) : ControllerBase
         x.Modulo,
         x.Accion
     }).ToListAsync());
-    [HttpGet("api/v1/auditoria")]
+    [HttpGet("api/v1/auditoria"), Authorize(Policy = "auditoria.consultar")]
     public async Task<IActionResult> Auditoria(int pagina = 1, int tamanoPagina = 20) => Ok(await db.RegistrosAuditoria.OrderByDescending(x => x.Fecha).Select(x => new
     {
         x.Id,

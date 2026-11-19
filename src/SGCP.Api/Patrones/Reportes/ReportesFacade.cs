@@ -11,13 +11,20 @@ public enum TipoReporte
     CLIENTES, COTIZACIONES, PEDIDOS, PRODUCCION, INVENTARIO, PAGOS, ENTREGAS
 }
 public record FiltroReporte(DateTime? Desde = null, DateTime? Hasta = null, Guid? ProductoId = null, Guid? ClienteId = null, string? Estado = null, Guid? ClasificacionId = null);
-public record TablaReporte(string Titulo, string[] Columnas, List<object?[]> Filas);
+public record TablaReporte(string Titulo, string[] Columnas, List<object?[]> Filas)
+{
+    // Metadatos de navegación, excluidos de las columnas y de toda exportación.
+    public List<Guid?>? Constancias { get; init; }
+}
 
 public class ReportesFacade(SgcpContext db, ActorActual actor)
 {
     private static readonly Dictionary<string, TipoReporte[]> Matriz = new()
     {
-        ["ADMINISTRACION"] = Enum.GetValues<TipoReporte>(),
+        ["SUPERADMIN"] = Enum.GetValues<TipoReporte>(),
+        ["PROPIETARIO"] = Enum.GetValues<TipoReporte>(),
+        ["ADMINISTRADOR"] = [TipoReporte.CLIENTES, TipoReporte.PRODUCCION, TipoReporte.INVENTARIO, TipoReporte.ENTREGAS],
+        ["FINANZAS"] = [TipoReporte.PAGOS, TipoReporte.PEDIDOS],
         ["VENTAS"] = [TipoReporte.CLIENTES, TipoReporte.COTIZACIONES, TipoReporte.PEDIDOS, TipoReporte.PAGOS, TipoReporte.ENTREGAS],
         ["PRODUCCION"] = [TipoReporte.PRODUCCION, TipoReporte.INVENTARIO],
         ["ALMACEN"] = [TipoReporte.PRODUCCION, TipoReporte.INVENTARIO],
@@ -58,8 +65,8 @@ public class ReportesFacade(SgcpContext db, ActorActual actor)
                         throw new ReglaException("FILTRO_INVALIDO", "Estado: ACTIVO o INACTIVO.", 400);
                     var filas = await db.Clientes.AsNoTracking().Where(x => x.FechaAlta >= desde && x.FechaAlta <= hasta &&
                         (f.ClienteId == null || x.Id == f.ClienteId) && (activo == null || x.Activo == activo))
-                        .OrderBy(x => x.Nombre).ThenBy(x => x.Id).Select(x => new { x.Id, x.Nombre, x.Tipo, x.Telefono, x.Activo }).Take(10001).ToListAsync();
-                    tabla = new("Clientes", ["Id", "Nombre", "Tipo", "Teléfono", "Activo"], filas.Select(x => new object?[] { x.Id, x.Nombre, x.Tipo, x.Telefono, x.Activo }).ToList());
+                        .OrderBy(x => x.Nombre).ThenBy(x => x.Id).Select(x => new { x.IdentificacionFiscal, x.Nombre, x.Tipo, x.Telefono, x.Activo }).Take(10001).ToListAsync();
+                    tabla = new("Clientes", ["Documento (CI/NIT)", "Nombre", "Tipo", "Teléfono", "Activo"], filas.Select(x => new object?[] { string.IsNullOrWhiteSpace(x.IdentificacionFiscal) ? "Sin registrar" : x.IdentificacionFiscal, x.Nombre, x.Tipo, x.Telefono, x.Activo }).ToList());
                     break;
                 }
             case TipoReporte.COTIZACIONES:
@@ -188,7 +195,7 @@ public class ReportesFacade(SgcpContext db, ActorActual actor)
             case TipoReporte.ENTREGAS:
                 {
                     var estado = Estado<EstadoEntrega>(f.Estado);
-                    var soloAsignadas = !actor.Comprador && !actor.Principal.IsInRole("ADMINISTRACION") && !actor.Principal.IsInRole("VENTAS");
+                    var soloAsignadas = !actor.Comprador && !actor.GestionGlobal && !actor.Principal.IsInRole("ADMINISTRADOR") && !actor.Principal.IsInRole("VENTAS");
                     var filas = await (from e in db.Entregas.AsNoTracking()
                                        join p in db.Pedidos on e.PedidoId equals p.Id
                                        join c in db.Clientes on p.ClienteId equals c.Id
@@ -207,9 +214,9 @@ public class ReportesFacade(SgcpContext db, ActorActual actor)
                                            e.Estado,
                                            e.Receptor
                                        }).Take(10001).ToListAsync();
-                    // La columna Entrega lleva el id para pedir la constancia (GET entregas/{id}/constancia).
-                    tabla = new("Entregas", ["Pedido", "Cliente", "Fecha prevista UTC", "Fecha real UTC", "Estado", "Receptor", "Entrega"],
-                        filas.Select(x => new object?[] { x.Pedido, x.Cliente, x.FechaPrevista, x.FechaReal, x.Estado.ToString(), x.Receptor, x.Entrega }).ToList());
+                    tabla = new("Entregas", ["Pedido", "Cliente", "Fecha prevista UTC", "Fecha real UTC", "Estado", "Receptor"],
+                        filas.Select(x => new object?[] { x.Pedido, x.Cliente, x.FechaPrevista, x.FechaReal, x.Estado.ToString(), x.Receptor }).ToList())
+                    { Constancias = actor.Comprador || actor.Tiene("saldos.consultar") ? filas.Select(x => x.Estado == EstadoEntrega.ENTREGADA ? (Guid?)x.Entrega : null).ToList() : null };
                     break;
                 }
             default:
@@ -217,6 +224,9 @@ public class ReportesFacade(SgcpContext db, ActorActual actor)
         }
         if (tabla.Filas.Count > 10000)
             throw new ReglaException("REPORTE_MUY_AMPLIO", "Acota los filtros a un máximo de 10000 filas.", 400);
+        db.RegistrosAuditoria.Add(new SGCP.Api.Dominio.Entidades.RegistroAuditoria { UsuarioId = actor.Id,
+            Entidad = "Reporte", EntidadId = Guid.Empty, Operacion = "CONSULTAR_" + tipo, Fecha = DateTime.UtcNow });
+        await db.SaveChangesAsync();
         return tabla;
     }
 

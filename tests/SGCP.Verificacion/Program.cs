@@ -23,6 +23,13 @@ var puerto = servidor ? 5091 : 5093;
 var cadena = sqlServer is not null
     ? new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(sqlServer) { InitialCatalog = "sgcp_pruebas_" + Guid.NewGuid().ToString("N") }.ConnectionString
     : sql is null ? null : new MySqlConnectionStringBuilder(sql) { Database = "sgcp_pruebas_" + Guid.NewGuid().ToString("N") }.ConnectionString;
+// La configuración externa solo aporta el servidor; nunca se usa como base de datos destino.
+if (cadena is not null)
+{
+    var destino = sqlServer is not null ? new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(cadena).InitialCatalog : new MySqlConnectionStringBuilder(cadena).Database;
+    if (!System.Text.RegularExpressions.Regex.IsMatch(destino, "^sgcp_pruebas_[a-f0-9]{32}$"))
+        throw new InvalidOperationException("El verificador solo puede escribir en una base temporal sgcp_pruebas_<UUID>.");
+}
 var app = Arranque.Crear(["--environment", "Testing", "--urls", $"http://127.0.0.1:{puerto}"], b =>
 {
     b.Configuration.AddInMemoryCollection(new Dictionary<string, string?> { ["Jwt:Clave"] = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48)), ["Jwt:Emisor"] = "SGCPapi", ["Jwt:Audiencia"] = "SGCPclientes", ["DatosIniciales:ClaveAdministrador"] = "Prueba-local-2026!", ["DatosIniciales:Ejemplos"] = "true", ["DatosIniciales:Habilitar"] = "false", ["Recuperacion:CarpetaLocal"] = archivo + "-correos", ["Logging:LogLevel:Default"] = "Warning" });
@@ -47,6 +54,7 @@ await using (var scope = app.Services.CreateAsyncScope())
             throw new Exception("Migraciones pendientes tras database update.");
     }
     await DatosIniciales.Sembrar(db, app.Configuration);
+    if (!servidor) await Perfiles.Migracion(db, app.Configuration);
 }
 await app.StartAsync();
 Console.WriteLine("Cultura de verificación: " + System.Globalization.CultureInfo.CurrentCulture.Name);
@@ -282,6 +290,7 @@ try
     await Exito("POST", "auth/cerrar-sesion");
     Comprobar((await Llamar("GET", "auth/yo")).Estado == 401, "Cerrar sesión invalida el token");
     Console.WriteLine($"RESULTADO: {cuenta} comprobaciones correctas.");
+    await Perfiles.Ejecutar(http);
     if (cadena is not null && !args.Contains("--solo-sprint1"))
     {
         await Sprints234.Ejecutar(http, app);
