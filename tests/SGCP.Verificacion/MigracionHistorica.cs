@@ -14,6 +14,8 @@ public static class MigracionHistorica
         {
             Database = "sgcp_pruebas_upgrade_" + Guid.NewGuid().ToString("N")
         }.ConnectionString;
+        if (!System.Text.RegularExpressions.Regex.IsMatch(new MySqlConnectionStringBuilder(cadena).Database, "^sgcp_pruebas_upgrade_[a-f0-9]{32}$"))
+            throw new InvalidOperationException("La migración histórica solo puede usar una base temporal de pruebas.");
         await using var db = new SgcpContext(new DbContextOptionsBuilder<SgcpContext>().UseMySQL(cadena).Options);
         try
         {
@@ -52,7 +54,9 @@ public static class MigracionHistorica
                     Unidad = "kg", PrecioAcordado = 40.25m, CostoReferenciaAcordado = 30
                 }]
             };
-            db.AddRange(clasificacion, producto, cliente, cotizacion, pedido);
+            // Se inserta con el contrato del esquema histórico: TipoDocumento todavía no existe.
+            await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Clientes (Id,Nombre,Tipo,Telefono,Direccion,IdentificacionFiscal,CondicionHabitual,Activo,FechaAlta,Observaciones) VALUES ({cliente.Id},{cliente.Nombre},{cliente.Tipo},{cliente.Telefono},{cliente.Direccion},{cliente.IdentificacionFiscal},{cliente.CondicionHabitual.ToString()},{cliente.Activo},{cliente.FechaAlta},{cliente.Observaciones})");
+            db.AddRange(clasificacion, producto, cotizacion, pedido);
             await db.SaveChangesAsync();
             db.ChangeTracker.Clear();
             await db.Database.MigrateAsync();

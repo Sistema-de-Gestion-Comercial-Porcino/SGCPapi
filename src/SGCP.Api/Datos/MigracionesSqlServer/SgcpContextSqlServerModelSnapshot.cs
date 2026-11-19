@@ -241,7 +241,7 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
                         .ValueGeneratedOnAddOrUpdate()
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)")
-                        .HasComputedColumnSql("CASE WHEN [Activo] = 1 AND [IdentificacionFiscal] <> '' THEN [IdentificacionFiscal] ELSE NULL END", true);
+                        .HasComputedColumnSql("CASE WHEN [IdentificacionFiscal] <> '' THEN [IdentificacionFiscal] ELSE NULL END", true);
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -263,12 +263,19 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
+                    b.Property<string>("TipoDocumento")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("SIN_ESPECIFICAR");
+
                     b.HasKey("Id");
 
                     b.HasIndex(new[] { "IdentificacionFiscal" }, "IX_Clientes_IdentificacionFiscalUnica")
                         .IsUnique()
                         .HasDatabaseName("IX_Clientes_IdentificacionFiscalUnica")
-                        .HasFilter("[Activo] = 1 AND [IdentificacionFiscal] <> ''");
+                        .HasFilter("[IdentificacionFiscal] <> ''");
 
                     b.ToTable("Clientes", (string)null);
                 });

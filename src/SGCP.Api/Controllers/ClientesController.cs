@@ -37,7 +37,7 @@ public class ClientesController(SgcpContext db, ServicioClientes servicio, Actor
         if (!string.IsNullOrWhiteSpace(tipo))
             q = q.Where(x => x.Tipo == tipo);
         return Ok(await q.OrderBy(x => x.Nombre).ThenBy(x => x.Id)
-            .Select(x => new ClienteRespuesta(x.Id, x.Nombre, x.Tipo, x.IdentificacionFiscal, x.Telefono, x.Direccion, x.CondicionHabitual, x.Activo, x.FechaAlta, x.Observaciones))
+            .Select(x => new ClienteRespuesta(x.Id, x.Nombre, x.Tipo, x.IdentificacionFiscal, x.Telefono, x.Direccion, x.CondicionHabitual, x.Activo, x.FechaAlta, x.Observaciones, x.TipoDocumento))
             .Paginar(pagina, tamanoPagina));
     }
 

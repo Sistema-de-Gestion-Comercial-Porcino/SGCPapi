@@ -47,6 +47,19 @@ public class SgcpContext : DbContext
     public DbSet<EvidenciaRecepcion> EvidenciasRecepcion => Set<EvidenciaRecepcion>();
     public DbSet<ComprobanteFiscal> ComprobantesFiscales => Set<ComprobanteFiscal>();
     public DbSet<PrevisionProducto> PrevisionesProducto => Set<PrevisionProducto>();
+    private void ValidarHistoria()
+    {
+        foreach (var entrada in ChangeTracker.Entries())
+        {
+            if (entrada.Entity is RegistroAuditoria && entrada.State is EntityState.Modified or EntityState.Deleted)
+                throw new InvalidOperationException("La auditoría es inmutable.");
+            if (entrada.State == EntityState.Modified && entrada.Properties.Any(p => p.Metadata.IsPrimaryKey() && p.IsModified))
+                throw new InvalidOperationException("Los identificadores internos son inmutables.");
+        }
+    }
+    public override int SaveChanges(bool acceptAllChangesOnSuccess) { ValidarHistoria(); return base.SaveChanges(acceptAllChangesOnSuccess); }
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    { ValidarHistoria(); return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken); }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(SgcpContext).Assembly);

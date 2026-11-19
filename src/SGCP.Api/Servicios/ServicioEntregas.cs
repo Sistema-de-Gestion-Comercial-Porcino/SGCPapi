@@ -47,7 +47,7 @@ public class ServicioEntregas(SgcpContext db, UnidadTrabajo unidad, ActorActual 
     private async Task Responsable(Guid id)
     {
         if (!await db.Usuarios.AnyAsync(x => x.Id == id && x.Estado == EstadoUsuario.ACTIVO &&
-                x.Roles.Any(r => r.Nombre == "ENTREGA" || r.Nombre == "ADMINISTRACION")))
+                x.Roles.Any(r => r.Nombre == "ENTREGA" || r.Nombre == "SUPERADMIN" || r.Nombre == "PROPIETARIO" || r.Nombre == "ADMINISTRADOR")))
             throw new ReglaException("RESPONSABLE_INVALIDO", "Asigna una cuenta activa responsable de entrega.");
     }
 
@@ -299,7 +299,7 @@ public class ServicioEntregas(SgcpContext db, UnidadTrabajo unidad, ActorActual 
     public Task<bool> FinalizarRuta(Guid id) => unidad.Ejecutar(async () =>
     {
         var ruta = await db.Rutas.FindAsync(id) ?? throw new ReglaException("NO_ENCONTRADO", "Ruta no encontrada.", 404);
-        if (ruta.ResponsableId != actor.Id && !actor.Principal.IsInRole("ADMINISTRACION"))
+        if (ruta.ResponsableId != actor.Id && !actor.GestionGlobal && !actor.Principal.IsInRole("ADMINISTRADOR"))
             throw new ReglaException("SIN_PERMISO", "Ruta de otro responsable.", 403);
         if (ruta.Estado == EstadoRuta.FINALIZADA || !await db.Entregas.AnyAsync(x => x.RutaId == id)
             || await db.Entregas.AnyAsync(x => x.RutaId == id && x.Estado != EstadoEntrega.ENTREGADA && x.Estado != EstadoEntrega.OBSERVADA && x.Estado != EstadoEntrega.CANCELADA)
@@ -316,7 +316,7 @@ public class ServicioEntregas(SgcpContext db, UnidadTrabajo unidad, ActorActual 
 
     public void VerAsignacion(Entrega entrega, bool estricto = false)
     {
-        if (entrega.ResponsableId != actor.Id && (estricto || !actor.Principal.IsInRole("ADMINISTRACION")))
+        if (entrega.ResponsableId != actor.Id && (estricto || (!actor.GestionGlobal && !actor.Principal.IsInRole("ADMINISTRADOR"))))
             throw new ReglaException("SIN_PERMISO", "La entrega no está asignada a tu cuenta.", 403);
     }
 }

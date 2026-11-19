@@ -15,6 +15,7 @@ public class ActorActual(IHttpContextAccessor acceso)
             401);
     public Guid? ClienteId => Guid.TryParse(Principal.FindFirstValue("clienteId"), out var id) ? id : null;
     public bool Comprador => Principal.IsInRole("COMPRADOR");
+    public bool GestionGlobal => RolesSistema.GestionGlobal(Principal);
     public bool Tiene(string permiso) => Principal.HasClaim("permiso", permiso);
     public void VerCliente(Guid cliente)
     {

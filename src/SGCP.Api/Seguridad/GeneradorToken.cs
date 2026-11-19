@@ -12,8 +12,16 @@ public class GeneradorToken(IConfiguration config)
             usuario.Nombre,
             usuario.Login,
             usuario.Roles.Where(r => r.Activo).Select(r => r.Nombre).ToArray(),
-            usuario.Roles.Where(r => r.Activo).SelectMany(r => r.Permisos).Select(p => p.Codigo).Distinct().ToArray(),
+            PermisosEfectivos(usuario),
             usuario.ClienteId);
+    public static string[] PermisosEfectivos(Usuario usuario)
+    {
+        var roles = usuario.Roles.Where(r => r.Activo).ToArray();
+        var restringir = roles.Any(r => r.Nombre == "ADMINISTRADOR") &&
+            !roles.Any(r => r.Nombre is "SUPERADMIN" or "PROPIETARIO" or "FINANZAS");
+        return roles.SelectMany(r => r.Permisos).Select(p => p.Codigo)
+            .Where(p => !restringir || !RolesSistema.Financieros.Contains(p)).Distinct().ToArray();
+    }
     public static List<Claim> Claims(Usuario usuario, Guid sesion)
     {
         var datos = Resumen(usuario);

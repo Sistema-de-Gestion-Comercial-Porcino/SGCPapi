@@ -240,7 +240,7 @@ public class ServicioInventario(SgcpContext db, UnidadTrabajo unidad, ActorActua
         if (p.EntregaId is not null)
         {
             var entrega = await db.Entregas.FindAsync(p.EntregaId) ?? throw new ReglaException("NO_ENCONTRADO", "Entrega no encontrada.", 404);
-            if (entrega.ResponsableId != actor.Id && !actor.Principal.IsInRole("ADMINISTRACION"))
+            if (entrega.ResponsableId != actor.Id && !actor.GestionGlobal && !actor.Principal.IsInRole("ADMINISTRADOR"))
                 throw new ReglaException("SIN_PERMISO", "La entrega no está asignada a tu cuenta.", 403);
         }
         if (p.LoteId is not null && !await db.Lotes.AnyAsync(x => x.Id == p.LoteId))

@@ -16,7 +16,17 @@ public class ReportesController(ReportesFacade facade, ExportadorReportes export
     [HttpGet]
     public IActionResult Disponibles() => Ok(facade.Disponibles());
     [HttpGet("{tipo}")]
-    public async Task<IActionResult> Consultar(TipoReporte tipo, [FromQuery] FiltroReporte filtro) => Ok(await facade.Consultar(tipo, filtro));
+    public async Task<IActionResult> Consultar(TipoReporte tipo, [FromQuery] FiltroReporte filtro, int versionVista = 1)
+    {
+        var tabla = await facade.Consultar(tipo, filtro);
+        // El cliente anterior usa esta columna como enlace, nunca como texto visible.
+        // Las exportaciones siempre utilizan la tabla limpia de Consultar, sin este adaptador.
+        if (tipo == TipoReporte.ENTREGAS && versionVista < 2)
+            return Ok(tabla with { Columnas = [.. tabla.Columnas, "Entrega"],
+                Filas = tabla.Filas.Select((fila, i) => fila.Concat(new object?[] {
+                    tabla.Constancias is not null && i < tabla.Constancias.Count ? tabla.Constancias[i] : null }).ToArray()).ToList() });
+        return Ok(tabla);
+    }
     [HttpGet("{tipo}/exportar/{formato}")]
     public async Task<IActionResult> Exportar(TipoReporte tipo, string formato, [FromQuery] FiltroReporte filtro)
     {
@@ -70,7 +80,7 @@ public class ConstanciasController(SgcpContext db, ActorActual actor, Exportador
         var evidencias = await db.EvidenciasRecepcion.AsNoTracking().Where(x => x.RecepcionId == recepcion.Id).ToListAsync();
         var tabla = new TablaReporte("Constancia de entrega", ["Dato", "Valor"],
         [
-            ["Pedido", pedido.Codigo], ["Entrega", entrega.Id], ["Cliente", pedido.Cliente.Nombre],
+            ["Pedido", pedido.Codigo], ["Cliente", pedido.Cliente.Nombre],
             ["Receptor", recepcion.Receptor], ["Fecha real UTC", recepcion.FechaReal],
             ["Fecha de sincronización UTC", recepcion.FechaSincronizacion], ["Resultado", "Conforme"],
             ["Peso recibido", recepcion.PesoRecibido.ToString("0.000", System.Globalization.CultureInfo.GetCultureInfo("es-BO")) + " " + recepcion.Unidad],

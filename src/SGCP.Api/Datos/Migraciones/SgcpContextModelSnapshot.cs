@@ -236,7 +236,7 @@ namespace SGCP.Api.Datos.Migraciones
                         .ValueGeneratedOnAddOrUpdate()
                         .HasMaxLength(40)
                         .HasColumnType("varchar(40)")
-                        .HasComputedColumnSql("CASE WHEN `Activo` = 1 AND `IdentificacionFiscal` <> '' THEN `IdentificacionFiscal` ELSE NULL END", true);
+                        .HasComputedColumnSql("CASE WHEN `IdentificacionFiscal` <> '' THEN `IdentificacionFiscal` ELSE NULL END", true);
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -257,6 +257,13 @@ namespace SGCP.Api.Datos.Migraciones
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("varchar(60)");
+
+                    b.Property<string>("TipoDocumento")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasDefaultValue("SIN_ESPECIFICAR");
 
                     b.HasKey("Id");
 

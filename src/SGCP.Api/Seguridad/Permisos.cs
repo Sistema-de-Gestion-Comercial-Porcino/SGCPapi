@@ -3,7 +3,7 @@ namespace SGCP.Api.Seguridad;
 public static class Permisos
 {
     public static readonly string[] Todos = ["usuarios.consultar",
-            "usuarios.administrar",
+            "usuarios.administrar", "auditoria.consultar",
             "clientes.consultar",
             "clientes.administrar",
             "catalogo.consultar",
