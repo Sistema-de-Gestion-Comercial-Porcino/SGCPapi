@@ -1,0 +1,11 @@
+Web III - W3-P4 - Persistencia
+Version de la API: 356c9dc
+Motor: SQL Server Express local, base aislada de evidencias.
+Proceso detenido: PID 9464
+Proceso iniciado: PID 7684
+Cliente consultado antes y despues: 28c8719f-5349-4699-8246-d7cd8d91abda
+Nombre conservado: Cliente prueba Web III editado
+Telefono conservado: 70000001
+Fecha de alta conservada (UTC): 2026-11-19T03:38:00.2486479Z
+Resultado: GET 200 antes y despues del reinicio; coinciden todos los campos.
+Capturas: 12a_GET_cliente_antes_reinicio_200.jpg y 12b_GET_cliente_despues_reinicio_200.jpg.
