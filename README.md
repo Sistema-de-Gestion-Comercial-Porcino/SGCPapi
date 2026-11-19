@@ -121,6 +121,12 @@ El verificador crea una base `sgcp_pruebas_<uuid>` y la elimina al terminar.
 
 ## Migraciones y pruebas
 
+Para repetir los 12 casos de Web III, abre [pruebas/API_Integrador.http](pruebas/API_Integrador.http) en Visual Studio con la API en ejecución. Selecciona el entorno `local` y crea `pruebas/http-client.env.json.user` con `{ "local": { "claveAdministrador": "TU_CLAVE_LOCAL" } }`, usando tu contraseña local de administrador. Los archivos `*.user` están excluidos de Git. Puedes cambiar `api` y `usuarioAdministrador` en ese mismo entorno si usas otro puerto o cuenta.
+
+Ejecuta los bloques de arriba hacia abajo, incluidas las preparaciones de catálogo, precio, cotización aceptada y pedido. Los valores son sintéticos y cada recorrido crea datos propios. El cliente principal se conserva para la persistencia y el DELETE exitoso usa un segundo cliente sin historial. Antes del caso 12, detén y vuelve a iniciar la API con la misma base, manteniendo abierto el editor HTTP. El archivo indica qué código y datos comprobar en cada respuesta.
+
+Las [evidencias de Web III](evidencias/WebIII/LEEME.md) reúnen las capturas de Swagger y los 12 casos, incluida la comparación antes y después de reiniciar la API.
+
 La migración inicial fue generada con **MySql.EntityFrameworkCore**, el proveedor oficial de Oracle, no convertida desde otro motor. `database/InicialSprint1.sql` es el script MySQL para revisión.
 
 No uses `--idempotent` con MySQL: EF genera `IF NOT EXISTS(...) BEGIN ... END`, que es sintaxis de T-SQL y MySQL rechaza. El script del repositorio es el plano, sin esa envoltura; se aplica una sola vez sobre una base vacía. Para reaplicar sin riesgo usá `dotnet ef database update`, que sí consulta `__EFMigrationsHistory`.
@@ -234,6 +240,7 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v4.4.1 | 2026-11-18 | 4 | Web III (W3-P4): comentarios XML y respuestas de Swagger en Productos, Cotizaciones y Pedidos, contacto del equipo y 12 casos reproducibles en `pruebas/API_Integrador.http`, con preparación del historial comercial y comprobación de persistencia tras reiniciar la API; capturas en `evidencias/WebIII` | Victor Manuel Manrique Arancivia |
 | v4.2.0 | 2026-11-18 | 4 | Web III (W3-P2): Clientes como recurso REST. DTO de salida `ClienteRespuesta`; `POST` con 201 y `Location` en clientes, productos y cotizaciones; `DELETE clientes/{id}` con la regla `CLIENTE_CON_HISTORIAL` (409) y auditoría; `GET clientes/{id}/pedidos` con aislamiento del comprador; `ProducesResponseType` y comentarios en `ClientesController`; 20 comprobaciones nuevas en el verificador | Angel Sebastian Eguez Mur |
 | v4.1.2 | 2026-11-18 | 4 | SQL Server como segundo motor, elegible con `BaseDatos:Proveedor`: `SgcpContextSqlServer` con migración propia (`Datos/MigracionesSqlServer`) y script `database/EsquemaSqlServer.sql`; manejo de interbloqueos de SQL Server; verificador con `SGCP_SQLSERVER_TEST` y flujo de CI con SQL Server 2022. MySQL sigue siendo el motor por defecto y no cambia | Dario Haziel Tambo Parra |
 | v4.1.1 | 2026-11-18 | 4 | Corrección pedida por la web (S3/S4-P2): `GET recepciones/conflictos` y `GET recepciones/{id}` devuelven la versión y el estado actuales de la entrega, para que Ventas revise conflictos sin `entregas.administrar`; el reporte ENTREGAS trae la columna «Entrega» con el id, y `GET pedidos/{pedidoId}/constancia` emite la constancia a Ventas y al comprador conociendo solo el pedido | Dario Haziel Tambo Parra |
