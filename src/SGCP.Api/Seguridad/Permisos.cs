@@ -11,6 +11,7 @@ public static class Permisos
             "costos.consultar",
             "costos.administrar",
             "cotizaciones.consultar",
+            "cotizaciones.solicitar",
             "cotizaciones.administrar",
             "cotizaciones.responder",
             "pedidos.consultar",

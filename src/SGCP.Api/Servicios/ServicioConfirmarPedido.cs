@@ -21,7 +21,7 @@ public class ServicioConfirmarPedido(SgcpContext db,
             throw new ReglaException("COTIZACION_YA_TIENE_PEDIDO", "La cotización ya generó un pedido.");
         if (c.Estado != EstadoCotizacion.ACEPTADA)
             throw new ReglaException("COTIZACION_NO_ACEPTADA", "Solo una cotización aceptada permite confirmar.");
-        if (c.VigenteHasta <= DateTime.UtcNow)
+        if (c.VigenteHasta is null || c.VigenteHasta <= DateTime.UtcNow)
             throw new ReglaException("COTIZACION_NO_VIGENTE", "La aceptación ya no está vigente; renueva el acuerdo.");
         if (!c.Cliente.Activo)
             throw new ReglaException("CLIENTE_NO_ACTIVO", "El cliente está desactivado.");

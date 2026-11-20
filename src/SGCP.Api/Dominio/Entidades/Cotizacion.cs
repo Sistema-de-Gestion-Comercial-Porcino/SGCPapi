@@ -7,7 +7,7 @@ public class Cotizacion
     public string Codigo { get; set; } = string.Empty;
     public int Version { get; set; } = 1;
     public DateTime Fecha { get; set; }
-    public DateTime VigenteHasta { get; set; }
+    public DateTime? VigenteHasta { get; set; }
     public CanalSolicitud Canal { get; set; }
     public EstadoCotizacion Estado { get; set; } = EstadoCotizacion.BORRADOR;
     public string MotivoRespuesta { get; set; } = string.Empty;

@@ -494,7 +494,7 @@ namespace SGCP.Api.Datos.Migraciones
                     b.Property<int>("Version")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("VigenteHasta")
+                    b.Property<DateTime?>("VigenteHasta")
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
