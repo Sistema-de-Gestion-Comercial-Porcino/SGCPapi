@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SGCP.Api.Comun;
 using SGCP.Api.Contratos.Peticiones;
+using SGCP.Api.Contratos.Respuestas;
 using SGCP.Api.Datos;
 using SGCP.Api.Dominio.Entidades;
 using SGCP.Api.Dominio.Enumeraciones;
@@ -98,9 +99,31 @@ public class InventarioController(SgcpContext db, ServicioInventario servicio) :
         Ok(await db.MovimientosStock.AsNoTracking().Where(x => existenciaId == null || x.ExistenciaId == existenciaId)
             .OrderByDescending(x => x.Fecha).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
 
+    /// <summary>Lista incidencias. El filtro resuelta es opcional.</summary>
+    /// <param name="resuelta">Si se indica, solo devuelve las resueltas o las pendientes.</param>
+    /// <param name="pagina">Página desde 1.</param>
+    /// <param name="tamanoPagina">10, 20, 50 o 100.</param>
     [HttpGet("incidencias")]
-    public async Task<IActionResult> Incidencias(int pagina = 1, int tamanoPagina = 20) =>
-        Ok(await db.Incidencias.AsNoTracking().OrderByDescending(x => x.Fecha).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
+    [ProducesResponseType(typeof(ResultadoPaginado<Incidencia>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Incidencias(bool? resuelta, int pagina = 1, int tamanoPagina = 20) =>
+        Ok(await db.Incidencias.AsNoTracking().Where(x => resuelta == null || x.Resuelta == resuelta)
+            .OrderByDescending(x => x.Fecha).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
+
+    /// <summary>Registra la resolución de una incidencia sin rehabilitar el animal ni el lote.</summary>
+    /// <param name="id">Incidencia.</param>
+    /// <param name="p">Motivo de la resolución.</param>
+    /// <response code="200">Incidencia resuelta.</response>
+    /// <response code="400">Ya estaba resuelta o el motivo está vacío.</response>
+    /// <response code="404">No existe la incidencia.</response>
+    [HttpPost("incidencias/{id:guid}/resolver"), Authorize(Policy = "produccion.administrar")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ResolverIncidencia(Guid id, MotivoPeticion p)
+    {
+        await servicio.ResolverIncidencia(id, p.Motivo);
+        return Ok(new { Id = id });
+    }
 }
 
 [ApiController, Route("api/v1/controles-frio"), Authorize(Policy = "frio.administrar")]
