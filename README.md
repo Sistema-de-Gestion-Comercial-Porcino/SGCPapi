@@ -296,6 +296,7 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v4.1.4 | 2026-11-19 | 4 | Corrección (W3-P1): PDF de evidencias rehecho en A4, una prueba por página con la captura de Swagger a todo el ancho, identificada por operación y código HTTP | Dario Haziel Tambo Parra |
 | v4.1.3 | 2026-11-19 | 4 | Web III (W3-P1): sección de entrega al inicio del README (proyecto, versión de .NET, integrantes con usuario de GitHub, repositorio, recurso evaluado y pasos con SQL Server) y PDF de evidencias `docs/Evidencias_API_Integrador.pdf` armado con las capturas de `evidencias/WebIII` | Dario Haziel Tambo Parra |
 | v4.4.1 | 2026-11-18 | 4 | Web III (W3-P4): comentarios XML y respuestas de Swagger en Productos, Cotizaciones y Pedidos, contacto del equipo y 12 casos reproducibles en `pruebas/API_Integrador.http`, con preparación del historial comercial y comprobación de persistencia tras reiniciar la API; capturas en `evidencias/WebIII` | Victor Manuel Manrique Arancivia |
 | v4.2.0 | 2026-11-18 | 4 | Web III (W3-P2): Clientes como recurso REST. DTO de salida `ClienteRespuesta`; `POST` con 201 y `Location` en clientes, productos y cotizaciones; `DELETE clientes/{id}` con la regla `CLIENTE_CON_HISTORIAL` (409) y auditoría; `GET clientes/{id}/pedidos` con aislamiento del comprador; `ProducesResponseType` y comentarios en `ClientesController`; 20 comprobaciones nuevas en el verificador | Angel Sebastian Eguez Mur |
