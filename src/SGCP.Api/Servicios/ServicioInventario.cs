@@ -228,6 +228,20 @@ public class ServicioInventario(SgcpContext db, UnidadTrabajo unidad, ActorActua
         return true;
     });
 
+    public Task<bool> ResolverIncidencia(Guid id, string motivo) => unidad.Ejecutar(async () =>
+    {
+        Validar.Motivo(motivo);
+        var incidencia = await db.Incidencias.FindAsync(id)
+            ?? throw new ReglaException("NO_ENCONTRADO", "Incidencia no encontrada.", 404);
+        if (incidencia.Resuelta)
+            throw new ReglaException("INCIDENCIA_YA_RESUELTA", "La incidencia ya está resuelta.", 400);
+        incidencia.Resuelta = true;
+        incidencia.Resolucion = motivo.Trim();
+        incidencia.ResueltaEn = DateTime.UtcNow;
+        auditoria.Registrar("RESOLVER", "Incidencia", id);
+        return true;
+    });
+
     public Task<Guid> Frio(FrioPeticion p) => unidad.Ejecutar(async () =>
     {
         Validar.FechaReal(p.Fecha);

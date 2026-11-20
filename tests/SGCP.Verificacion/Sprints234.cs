@@ -233,6 +233,36 @@ public static class Sprints234
             fecha = DateTime.UtcNow
         });
         Check(await Error("ANIMAL_RECHAZADO", "POST", "ordenes-produccion", Orden(rechazado)), "Animal rechazado bloquea producción");
+        var animalIncidencia = Id(await Ok("POST", "animales", new
+        {
+            identificacion = "AN-INCIDENCIA",
+            procedencia = "Granja",
+            proveedor = "Proveedor",
+            pesoIngreso = 85
+        }));
+        await Ok("POST", "animales/" + animalIncidencia + "/controles-sanitarios", new
+        {
+            resultado = "RECHAZADO",
+            observacion = "Incidencia para resolver",
+            fecha = DateTime.UtcNow
+        });
+        var incidencia = (await Ok("GET", "incidencias?resuelta=false"))["elementos"]!.AsArray()
+            .Single(x => x!["animalId"]?.ToString() == animalIncidencia);
+        var incidenciaId = Id(incidencia!);
+        Check((await Call("POST", "incidencias/" + incidenciaId + "/resolver", new
+        {
+            motivo = "Se documenta el cierre sin rehabilitar"
+        })).Estado == 200, "Resolver incidencia responde 200");
+        Check((await Call("POST", "incidencias/" + incidenciaId + "/resolver", new
+        {
+            motivo = "Segundo intento"
+        })).Estado == 400, "Resolver una incidencia dos veces responde 400");
+        Check((await Call("POST", "incidencias/" + Guid.NewGuid() + "/resolver", new
+        {
+            motivo = "No existe"
+        })).Estado == 404, "Resolver una incidencia inexistente responde 404");
+        Check((await Ok("GET", "animales?tamanoPagina=100"))["elementos"]!.AsArray()
+            .Single(x => Id(x!) == animalIncidencia)!["estado"]!.ToString() == "BLOQUEADO", "Resolver la incidencia no rehabilita al animal");
         var animalAnulada = Id(await Ok("POST", "animales", new
         {
             identificacion = "AN-ANULADA",
