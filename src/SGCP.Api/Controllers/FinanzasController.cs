@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SGCP.Api.Comun;
 using SGCP.Api.Contratos.Peticiones;
+using SGCP.Api.Contratos.Respuestas;
 using SGCP.Api.Datos;
 using SGCP.Api.Dominio.Entidades;
 using SGCP.Api.Dominio.Enumeraciones;
@@ -71,6 +72,61 @@ public class FinanzasController(SgcpContext db, ServicioFinanzas servicio) : Con
     public async Task<IActionResult> Resolver(Guid id, MotivoPeticion p)
     {
         await servicio.ResolverSena(id, p.Motivo);
+        return NoContent();
+    }
+
+    /// <summary>Lista seguimientos de cobro, filtrados por cliente y estado.</summary>
+    /// <param name="clienteId">Cliente dueño del pedido de la condición.</param>
+    /// <param name="estado">PENDIENTE, REALIZADO o CERRADO.</param>
+    /// <param name="pagina">Página desde 1.</param>
+    /// <param name="tamanoPagina">10, 20, 50 o 100.</param>
+    [HttpGet("seguimientos-cobro"), Authorize(Policy = "saldos.consultar")]
+    [ProducesResponseType(typeof(ResultadoPaginado<SeguimientoCobro>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Seguimientos(Guid? clienteId, EstadoSeguimiento? estado, int pagina = 1, int tamanoPagina = 20)
+    {
+        var q = db.SeguimientosCobro.AsNoTracking().Where(x => estado == null || x.Estado == estado);
+        if (clienteId is not null)
+            q = q.Where(x => db.CondicionesPago.Any(c => c.Id == x.CondicionPagoId
+                && db.Pedidos.Any(p => p.Id == c.PedidoId && p.ClienteId == clienteId)));
+        return Ok(await q.OrderBy(x => x.ProximaFecha).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
+    }
+
+    /// <summary>Abre un seguimiento en PENDIENTE para una condición a crédito con saldo pendiente.</summary>
+    /// <response code="201">Seguimiento creado.</response>
+    /// <response code="400">La condición es de contado o el pedido no tiene saldo.</response>
+    /// <response code="404">No existe la condición de pago.</response>
+    [HttpPost("condiciones-pago/{id:guid}/seguimientos"), Authorize(Policy = "pagos.administrar")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Seguimiento(Guid id, SeguimientoCobroPeticion p) =>
+        StatusCode(201, new { Id = await servicio.CrearSeguimiento(id, p.ProximaFecha) });
+
+    /// <summary>
+    /// Registra una gestión. Pasa a REALIZADO y, si queda saldo, vuelve a PENDIENTE con la próxima fecha.
+    /// Si el saldo llegó a cero, queda CERRADO.
+    /// </summary>
+    /// <response code="400">El seguimiento está cerrado, falta el resultado o, con saldo, la próxima fecha.</response>
+    /// <response code="404">No existe el seguimiento.</response>
+    [HttpPost("seguimientos-cobro/{id:guid}/gestion"), Authorize(Policy = "pagos.administrar")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Gestion(Guid id, GestionCobroPeticion p) =>
+        Ok(new { Id = id, Estado = await servicio.RegistrarGestion(id, p.Resultado, p.ProximaFecha) });
+
+    /// <summary>Cierra el seguimiento cuando el pedido ya no tiene saldo. CERRADO no vuelve a modificarse.</summary>
+    /// <response code="204">Seguimiento cerrado.</response>
+    /// <response code="400">Sigue habiendo saldo o el seguimiento ya está cerrado.</response>
+    /// <response code="404">No existe el seguimiento.</response>
+    [HttpPost("seguimientos-cobro/{id:guid}/cerrar"), Authorize(Policy = "pagos.administrar")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CerrarSeguimiento(Guid id)
+    {
+        await servicio.CerrarSeguimiento(id);
         return NoContent();
     }
 }

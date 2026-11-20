@@ -1701,6 +1701,38 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
                     b.ToTable("Rutas", (string)null);
                 });
 
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.SeguimientoCobro", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CondicionPagoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("FechaGestion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ProximaFecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Resultado")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CondicionPagoId");
+
+                    b.ToTable("SeguimientosCobro", (string)null);
+                });
+
             modelBuilder.Entity("SGCP.Api.Dominio.Entidades.Sena", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2404,6 +2436,15 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
                     b.HasOne("SGCP.Api.Dominio.Entidades.Transporte", null)
                         .WithMany()
                         .HasForeignKey("TransporteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("SGCP.Api.Dominio.Entidades.SeguimientoCobro", b =>
+                {
+                    b.HasOne("SGCP.Api.Dominio.Entidades.CondicionPago", null)
+                        .WithMany()
+                        .HasForeignKey("CondicionPagoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

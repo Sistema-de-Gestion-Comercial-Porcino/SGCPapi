@@ -263,6 +263,31 @@ public static class Sprints234
         })).Estado == 404, "Resolver una incidencia inexistente responde 404");
         Check((await Ok("GET", "animales?tamanoPagina=100"))["elementos"]!.AsArray()
             .Single(x => Id(x!) == animalIncidencia)!["estado"]!.ToString() == "BLOQUEADO", "Resolver la incidencia no rehabilita al animal");
+        var animalAnulada = Id(await Ok("POST", "animales", new
+        {
+            identificacion = "AN-ANULADA",
+            procedencia = "Granja",
+            proveedor = "Proveedor",
+            pesoIngreso = 80
+        }));
+        await Ok("POST", "animales/" + animalAnulada + "/controles-sanitarios", new
+        {
+            resultado = "APROBADO",
+            observacion = "Apto para anular la orden",
+            fecha = DateTime.UtcNow.AddMinutes(-2)
+        });
+        var ordenAnulada = Id(await Ok("POST", "ordenes-produccion", Orden(animalAnulada)));
+        await Ok("POST", "ordenes-produccion/" + ordenAnulada + "/anular", new
+        {
+            motivo = "Se anula antes del rechazo sanitario"
+        });
+        await Ok("POST", "animales/" + animalAnulada + "/controles-sanitarios", new
+        {
+            resultado = "RECHAZADO",
+            observacion = "Rechazo posterior a la anulación",
+            fecha = DateTime.UtcNow
+        });
+        Check((await Ok("GET", "ordenes-produccion/" + ordenAnulada))["orden"]!["estado"]!.ToString() == "ANULADA", "Una orden anulada no pasa a bloqueada al rechazar el animal");
         await Ok("POST", "auth/registro-comprador", new
         {
             nombre = "Comprador S234",
@@ -752,6 +777,57 @@ public static class Sprints234
             Check(volumen["filas"]!.AsArray().Count >= 2000, "Reporte con 2000 pedidos adicionales sin consulta por fila");
             Console.WriteLine("VOLUMEN: " + volumen["filas"]!.AsArray().Count + " pedidos; " + reloj.ElapsedMilliseconds + " ms (API HTTP + JSON).");
         }
+        var pedidoCobro = await Pedido(cliente);
+        await Ok("POST", "pedidos/" + pedidoCobro + "/condiciones-pago", new
+        {
+            modalidad = "CREDITO_ACORDADO",
+            importeAutorizado = 100,
+            vencimiento = DateTime.UtcNow.AddDays(15)
+        });
+        var condicionCredito = Id((await Ok("GET", "pedidos/" + pedidoCobro + "/condiciones-pago")).AsArray()[0]!);
+        var creado = await Call("POST", "condiciones-pago/" + condicionCredito + "/seguimientos", new
+        {
+            proximaFecha = DateTime.UtcNow.AddDays(5)
+        });
+        Check(creado.Estado == 201, "Crear seguimiento de cobro responde 201");
+        var seguimiento = Id(creado.Json!);
+        var gestionPendiente = await Ok("POST", "seguimientos-cobro/" + seguimiento + "/gestion", new
+        {
+            resultado = "El cliente pidió una nueva fecha",
+            proximaFecha = DateTime.UtcNow.AddDays(8)
+        });
+        Check(gestionPendiente["estado"]!.ToString() == "PENDIENTE", "Con saldo, la gestión vuelve a PENDIENTE");
+        var cargoCobro = Id((await Ok("GET", "cargos?pedidoId=" + pedidoCobro))["elementos"]![0]!);
+        var saldoCobro = (await Ok("GET", "saldos?pedidoId=" + pedidoCobro))["total"]!.GetValue<decimal>();
+        await Ok("POST", "pagos", new
+        {
+            clienteId = cliente,
+            referenciaUnica = "PAGO-COBRO-" + Guid.NewGuid().ToString("N")[..12],
+            importe = saldoCobro,
+            fecha = DateTime.UtcNow,
+            medio = "Transferencia",
+            aplicaciones = new[] { new { cargoId = cargoCobro, importe = saldoCobro } }
+        });
+        var gestionCerrada = await Ok("POST", "seguimientos-cobro/" + seguimiento + "/gestion", new
+        {
+            resultado = "Saldo cubierto"
+        });
+        Check(gestionCerrada["estado"]!.ToString() == "CERRADO", "Al pagar el total, la gestión cierra el seguimiento");
+        Check((await Call("POST", "seguimientos-cobro/" + seguimiento + "/gestion", new
+        {
+            resultado = "Intento posterior"
+        })).Estado == 400, "Un seguimiento cerrado no admite otra gestión");
+        var pedidoContado = await Pedido(cliente);
+        await Ok("POST", "pedidos/" + pedidoContado + "/condiciones-pago", new
+        {
+            modalidad = "CONTADO",
+            importeAutorizado = 0
+        });
+        var condicionContado = Id((await Ok("GET", "pedidos/" + pedidoContado + "/condiciones-pago")).AsArray()[0]!);
+        Check((await Call("POST", "condiciones-pago/" + condicionContado + "/seguimientos", new
+        {
+            proximaFecha = DateTime.UtcNow.AddDays(2)
+        })).Estado == 400, "No se abre seguimiento sobre una condición de contado");
         Console.WriteLine("RESULTADO P1: " + total + " comprobaciones S2–S4 correctas.");
     }
 }

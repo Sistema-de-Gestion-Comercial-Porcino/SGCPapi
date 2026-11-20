@@ -57,7 +57,7 @@ public class ServicioProduccion(SgcpContext db, UnidadTrabajo unidad, ActorActua
             var ordenes = await db.OrdenesProduccion.Where(x => x.AnimalId == id).ToListAsync();
             foreach (var orden in ordenes)
             {
-                if (orden.Estado != EstadoOrdenProduccion.CONFIRMADA)
+                if (orden.Estado is not (EstadoOrdenProduccion.CONFIRMADA or EstadoOrdenProduccion.ANULADA))
                     orden.Estado = EstadoOrdenProduccion.BLOQUEADA;
                 foreach (var lote in await db.Lotes.Where(x => x.OrdenProduccionId == orden.Id).Select(x => x.Id).ToListAsync())
                     await inventario.BloquearLote(lote, (p.Observacion?.Trim() ?? ""));

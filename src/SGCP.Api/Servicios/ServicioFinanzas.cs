@@ -216,6 +216,70 @@ public class ServicioFinanzas(SgcpContext db, UnidadTrabajo unidad, ActorActual 
         return true;
     });
 
+    public Task<Guid> CrearSeguimiento(Guid condicionId, DateTime proximaFecha) => unidad.Ejecutar(async () =>
+    {
+        var condicion = await db.CondicionesPago.FindAsync(condicionId)
+            ?? throw new ReglaException("NO_ENCONTRADO", "Condición de pago no encontrada.", 404);
+        if (condicion.Modalidad != FormaPago.CREDITO_ACORDADO)
+            throw new ReglaException("CONDICION_DE_CONTADO", "El seguimiento solo nace si la condición de pago es a crédito.", 400);
+        var saldo = await SaldoPedido(condicion.PedidoId);
+        if (saldo <= 0)
+            throw new ReglaException("SIN_SALDO", "No hay saldo pendiente para abrir el seguimiento.");
+        var seguimiento = new SeguimientoCobro
+        {
+            CondicionPagoId = condicion.Id,
+            ProximaFecha = Consultas.Utc(proximaFecha),
+            Estado = EstadoSeguimiento.PENDIENTE
+        };
+        db.SeguimientosCobro.Add(seguimiento);
+        auditoria.Registrar("CREAR_SEGUIMIENTO_COBRO", "SeguimientoCobro", seguimiento.Id);
+        return seguimiento.Id;
+    });
+
+    public Task<EstadoSeguimiento> RegistrarGestion(Guid id, string resultado, DateTime? proximaFecha) => unidad.Ejecutar(async () =>
+    {
+        if (string.IsNullOrWhiteSpace(resultado))
+            throw new ReglaException("DATOS_INVALIDOS", "Indica el resultado de la gestión.", 400);
+        var seguimiento = await db.SeguimientosCobro.FindAsync(id)
+            ?? throw new ReglaException("NO_ENCONTRADO", "Seguimiento no encontrado.", 404);
+        if (seguimiento.Estado == EstadoSeguimiento.CERRADO)
+            throw new ReglaException("SEGUIMIENTO_CERRADO", "Un seguimiento cerrado no admite modificaciones.", 400);
+        if (seguimiento.Estado != EstadoSeguimiento.PENDIENTE)
+            throw new ReglaException("TRANSICION_INVALIDA", "Solo un seguimiento pendiente admite una gestión.", 400);
+        seguimiento.Estado = EstadoSeguimiento.REALIZADO;
+        seguimiento.FechaGestion = DateTime.UtcNow;
+        seguimiento.Resultado = resultado.Trim();
+        var condicion = (await db.CondicionesPago.FindAsync(seguimiento.CondicionPagoId))!;
+        var saldo = await SaldoPedido(condicion.PedidoId);
+        if (saldo <= 0)
+            seguimiento.Estado = EstadoSeguimiento.CERRADO;
+        else
+        {
+            if (proximaFecha is null)
+                throw new ReglaException("PROXIMA_FECHA_REQUERIDA", "Con saldo pendiente indica la próxima fecha de gestión.", 400);
+            seguimiento.ProximaFecha = Consultas.Utc(proximaFecha.Value);
+            seguimiento.Estado = EstadoSeguimiento.PENDIENTE;
+        }
+        auditoria.Registrar("REGISTRAR_GESTION_COBRO", "SeguimientoCobro", id);
+        return seguimiento.Estado;
+    });
+
+    public Task<bool> CerrarSeguimiento(Guid id) => unidad.Ejecutar(async () =>
+    {
+        var seguimiento = await db.SeguimientosCobro.FindAsync(id)
+            ?? throw new ReglaException("NO_ENCONTRADO", "Seguimiento no encontrado.", 404);
+        if (seguimiento.Estado == EstadoSeguimiento.CERRADO)
+            throw new ReglaException("SEGUIMIENTO_CERRADO", "Un seguimiento cerrado no admite modificaciones.", 400);
+        var condicion = (await db.CondicionesPago.FindAsync(seguimiento.CondicionPagoId))!;
+        if (await SaldoPedido(condicion.PedidoId) > 0)
+            throw new ReglaException("SALDO_PENDIENTE", "No se cierra el seguimiento mientras el pedido conserva saldo.", 400);
+        seguimiento.Estado = EstadoSeguimiento.CERRADO;
+        auditoria.Registrar("CERRAR_SEGUIMIENTO_COBRO", "SeguimientoCobro", id);
+        return true;
+    });
+
+    private async Task<decimal> SaldoPedido(Guid pedidoId) => (await Saldos(pedidoId: pedidoId)).Sum(x => x.Saldo);
+
     private async Task<Pedido> PedidoVigente(Guid id)
     {
         var pedido = await db.Pedidos.FindAsync(id) ?? throw new ReglaException("NO_ENCONTRADO", "Pedido no encontrado.", 404);
