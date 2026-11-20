@@ -19,7 +19,7 @@ API del Sistema de Gestión Comercial Porcino. ASP.NET Core 10 con controladores
 | Dario Haziel Tambo Parra | [`SuperGenio56`](https://github.com/SuperGenio56) | API de los sprints 1 a 4, SQL Server como motor con su migración, verificador y entrega |
 | Angel Sebastian Eguez Mur | [`sebaxtianmur89`](https://github.com/sebaxtianmur89) | Clientes como recurso REST: DTO de salida, 201 con `Location`, `DELETE` con regla de dominio, pedidos del cliente y 20 comprobaciones |
 | Victor Manuel Manrique Arancivia | [`VictorManrique01`](https://github.com/VictorManrique01) | Swagger documentado, 12 pruebas HTTP, evidencias, roles jerárquicos y reportes protegidos |
-| Sofia Cuellar Roca | [`sof1345`](https://github.com/sof1345) | Sin commits en este repositorio |
+| Sofia Cuellar Roca | [`sof1345`](https://github.com/sof1345) | Script de la entrega: ZIP limpio con el proyecto, las migraciones y el PDF, sin `bin`, `obj` ni `.vs` |
 
 ### Recurso evaluado
 
@@ -57,6 +57,18 @@ dotnet run --project src/SGCP.Api
 2. El primer arranque carga los datos de prueba: permisos, roles, la cuenta `admin` y el catálogo de ejemplo. La carga es idempotente.
 3. Swagger queda en `http://localhost:5081/swagger`. Inicia sesión con `POST /api/v1/auth/login`, pulsa **Authorize** y pega el token.
 4. Para comprobar la persistencia, detén la API, vuelve a iniciarla y repite `GET /api/v1/clientes/{id}`: los datos siguen en SQL Server.
+
+### ZIP de entrega
+
+Desde la raíz, en PowerShell:
+
+```powershell
+./scripts/Armar-Entrega.ps1
+```
+
+Genera `artifacts/SGCPapi-WebIII.zip`. El archivo queda fuera de Git. Incluye el proyecto completo, las migraciones de SQL Server (`Datos/MigracionesSqlServer`) y de MySQL, el README, el PDF de evidencias y las pruebas HTTP. Excluye `bin`, `obj` y `.vs`, y también `.git`, `artifacts`, `TestResults` y los archivos locales de secretos (`*.user`, `appsettings.Development.json`, `appsettings.Local.json`). La cadena de conexión de ejemplo está en este README; no hay credenciales reales dentro del ZIP. El script rechaza el archivo si falta el README, la migración de SQL Server, el PDF o las pruebas, o si se coló alguna carpeta prohibida.
+
+Para dejar el ZIP en otra ruta: `./scripts/Armar-Entrega.ps1 C:\entrega\SGCPapi-WebIII.zip`.
 
 ## Equipo
 
