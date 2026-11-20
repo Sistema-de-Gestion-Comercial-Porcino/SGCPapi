@@ -213,7 +213,7 @@ public class ServicioInventario(SgcpContext db, UnidadTrabajo unidad, ActorActua
         foreach (var ordenId in ordenes)
         {
             var orden = (await db.OrdenesProduccion.FindAsync(ordenId))!;
-            if (orden.Estado != EstadoOrdenProduccion.CONFIRMADA)
+            if (orden.Estado is not (EstadoOrdenProduccion.CONFIRMADA or EstadoOrdenProduccion.ANULADA))
                 orden.Estado = EstadoOrdenProduccion.BLOQUEADA;
             foreach (var hijo in await db.Lotes.Where(x => x.OrdenProduccionId == ordenId).Select(x => x.Id).ToListAsync())
                 await BloquearLote(hijo, "Insumo rechazado: " + lote.Codigo, visitados);

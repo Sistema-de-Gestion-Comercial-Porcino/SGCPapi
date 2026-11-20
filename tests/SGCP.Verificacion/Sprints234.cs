@@ -233,6 +233,31 @@ public static class Sprints234
             fecha = DateTime.UtcNow
         });
         Check(await Error("ANIMAL_RECHAZADO", "POST", "ordenes-produccion", Orden(rechazado)), "Animal rechazado bloquea producción");
+        var animalAnulada = Id(await Ok("POST", "animales", new
+        {
+            identificacion = "AN-ANULADA",
+            procedencia = "Granja",
+            proveedor = "Proveedor",
+            pesoIngreso = 80
+        }));
+        await Ok("POST", "animales/" + animalAnulada + "/controles-sanitarios", new
+        {
+            resultado = "APROBADO",
+            observacion = "Apto para anular la orden",
+            fecha = DateTime.UtcNow.AddMinutes(-2)
+        });
+        var ordenAnulada = Id(await Ok("POST", "ordenes-produccion", Orden(animalAnulada)));
+        await Ok("POST", "ordenes-produccion/" + ordenAnulada + "/anular", new
+        {
+            motivo = "Se anula antes del rechazo sanitario"
+        });
+        await Ok("POST", "animales/" + animalAnulada + "/controles-sanitarios", new
+        {
+            resultado = "RECHAZADO",
+            observacion = "Rechazo posterior a la anulación",
+            fecha = DateTime.UtcNow
+        });
+        Check((await Ok("GET", "ordenes-produccion/" + ordenAnulada))["orden"]!["estado"]!.ToString() == "ANULADA", "Una orden anulada no pasa a bloqueada al rechazar el animal");
         await Ok("POST", "auth/registro-comprador", new
         {
             nombre = "Comprador S234",
