@@ -308,6 +308,7 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v4.3.0 | 2026-11-19 | 4 | Seguimiento de cobros para Finanzas (entidad, migraciones MySQL y SQL Server, endpoints y verificación) | Sofia Cuellar Roca |
 | v4.1.4 | 2026-11-19 | 4 | Corrección (W3-P1): PDF de evidencias rehecho en A4, una prueba por página con la captura de Swagger a todo el ancho, identificada por operación y código HTTP | Dario Haziel Tambo Parra |
 | v4.1.3 | 2026-11-19 | 4 | Web III (W3-P1): sección de entrega al inicio del README (proyecto, versión de .NET, integrantes con usuario de GitHub, repositorio, recurso evaluado y pasos con SQL Server) y PDF de evidencias `docs/Evidencias_API_Integrador.pdf` armado con las capturas de `evidencias/WebIII` | Dario Haziel Tambo Parra |
 | v4.4.1 | 2026-11-18 | 4 | Web III (W3-P4): comentarios XML y respuestas de Swagger en Productos, Cotizaciones y Pedidos, contacto del equipo y 12 casos reproducibles en `pruebas/API_Integrador.http`, con preparación del historial comercial y comprobación de persistencia tras reiniciar la API; capturas en `evidencias/WebIII` | Victor Manuel Manrique Arancivia |
@@ -384,6 +385,7 @@ Todas requieren JWT. Swagger muestra los DTO, tipos y enumeraciones. Los listado
 | Condición acordada | `GET/POST pedidos/{id}/condiciones-pago` |
 | Cobranza | `GET/POST pagos`, `POST pagos/{id}/anular`, `GET saldos?clienteId=...&pedidoId=...` |
 | Señas | `GET/POST senas`, `POST senas/{id}/aplicar`, `resolver` |
+| Seguimiento de cobros | `GET seguimientos-cobro`, `POST condiciones-pago/{id}/seguimientos`, `POST seguimientos-cobro/{id}/gestion`, `cerrar` |
 | Transporte | `GET/POST transportes`, `PUT transportes/{id}`, `POST transportes/{id}/estado`, `GET responsables-entrega` |
 | Rutas | `GET/POST rutas`, `POST rutas/{id}/finalizar` |
 | Entregas | `GET/POST entregas`, `POST entregas/{id}/despachar`, `reasignar`, `GET mis-entregas` |

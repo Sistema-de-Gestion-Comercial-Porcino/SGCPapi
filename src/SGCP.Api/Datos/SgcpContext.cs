@@ -39,6 +39,7 @@ public class SgcpContext : DbContext
     public DbSet<CondicionPago> CondicionesPago => Set<CondicionPago>();
     public DbSet<Pago> Pagos => Set<Pago>();
     public DbSet<Sena> Senas => Set<Sena>();
+    public DbSet<SeguimientoCobro> SeguimientosCobro => Set<SeguimientoCobro>();
     public DbSet<AplicacionPago> AplicacionesPago => Set<AplicacionPago>();
     public DbSet<Transporte> Transportes => Set<Transporte>();
     public DbSet<Ruta> Rutas => Set<Ruta>();
