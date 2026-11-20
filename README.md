@@ -1,6 +1,62 @@
 # SGCPapi
 
-API del Sistema de Gestión Comercial Porcino. ASP.NET Core 10 con controladores, Entity Framework Core 10 y **MySQL 8**. La web MVC y Android consumen esta API; no acceden directamente a la base de datos.
+API del Sistema de Gestión Comercial Porcino. ASP.NET Core 10 con controladores, Entity Framework Core 10 y **SQL Server** o **MySQL 8** (elegible). La web MVC y Android consumen esta API; no acceden directamente a la base de datos.
+
+## Entrega Web III · API Integrador
+
+| Dato | Valor |
+|---|---|
+| Proyecto | **SGCPapi**: Web API del Sistema de Gestión Comercial Porcino (SGCP) |
+| Versión de .NET | **.NET 10** (SDK 10.0.100, `net10.0`), ASP.NET Core 10, Entity Framework Core 10.0.12 |
+| Base de datos | **SQL Server 2019 o posterior** (LocalDB, Express o Docker) con migración propia; MySQL 8 sigue disponible |
+| Repositorio | https://github.com/Sistema-de-Gestion-Comercial-Porcino/SGCPapi |
+| Evidencias | [`docs/Evidencias_API_Integrador.pdf`](docs/Evidencias_API_Integrador.pdf), capturas en [`evidencias/WebIII`](evidencias/WebIII) y pruebas reproducibles en [`pruebas/API_Integrador.http`](pruebas/API_Integrador.http) |
+
+### Integrantes
+
+| Integrante | Usuario de GitHub | Aporte en este repositorio |
+|---|---|---|
+| Dario Haziel Tambo Parra | [`SuperGenio56`](https://github.com/SuperGenio56) | API de los sprints 1 a 4, SQL Server como motor con su migración, verificador y entrega |
+| Angel Sebastian Eguez Mur | [`sebaxtianmur89`](https://github.com/sebaxtianmur89) | Clientes como recurso REST: DTO de salida, 201 con `Location`, `DELETE` con regla de dominio, pedidos del cliente y 20 comprobaciones |
+| Victor Manuel Manrique Arancivia | [`VictorManrique01`](https://github.com/VictorManrique01) | Swagger documentado, 12 pruebas HTTP, evidencias, roles jerárquicos y reportes protegidos |
+| Sofia Cuellar Roca | [`sof1345`](https://github.com/sof1345) | Sin commits en este repositorio |
+
+### Recurso evaluado
+
+El recurso principal es **Cliente** y su recurso relacionado es **Pedido** (un cliente tiene muchos pedidos, clave foránea `Pedidos.ClienteId`). Todas las rutas van bajo `/api/v1` y requieren el token de `POST /api/v1/auth/login`.
+
+| Operación | Ruta | Respuestas |
+|---|---|---|
+| Listado paginado | `GET /clientes?pagina=1&tamanoPagina=20` | 200 |
+| Consulta por id | `GET /clientes/{id}` | 200, 404 |
+| Alta | `POST /clientes` | 201 con `Location`, 400, 409 |
+| Edición | `PUT /clientes/{id}` | 200, 400, 404, 409 |
+| Baja | `DELETE /clientes/{id}` | 204, 404, 409 `CLIENTE_CON_HISTORIAL` |
+| Recurso relacionado | `GET /clientes/{id}/pedidos` | 200, 404 |
+
+Organización: entidades en `Dominio/`, DTO de entrada en `Contratos/Peticiones` y de salida en `Contratos/Respuestas`, controladores en `Controllers/`, reglas en `Servicios/` y datos (contexto, configuraciones y migraciones) en `Datos/`. El contexto se inyecta por constructor y todas las operaciones son asíncronas. Los errores se devuelven con un código (`DATOS_INVALIDOS`, `NO_ENCONTRADO`, `CLIENTE_NO_ACTIVO`, etc.).
+
+### Pasos con SQL Server
+
+El detalle está en [Usar SQL Server en lugar de MySQL](#usar-sql-server-en-lugar-de-mysql). En resumen, desde la raíz del repositorio:
+
+```bash
+dotnet restore
+dotnet tool restore
+dotnet user-secrets set "BaseDatos:Proveedor" "SqlServer" --project src/SGCP.Api
+# Cadena de ejemplo, sin credenciales reales:
+dotnet user-secrets set "ConnectionStrings:Sgcp" "Server=(localdb)\MSSQLLocalDB;Database=sgcp;Trusted_Connection=True;TrustServerCertificate=True" --project src/SGCP.Api
+dotnet user-secrets set "Jwt:Clave" "<clave de al menos 32 bytes en Base64>" --project src/SGCP.Api
+dotnet user-secrets set "DatosIniciales:ClaveAdministrador" "<contraseña inicial de admin>" --project src/SGCP.Api
+dotnet user-secrets set "DatosIniciales:Ejemplos" "true" --project src/SGCP.Api
+dotnet ef database update --project src/SGCP.Api --context SgcpContextSqlServer
+dotnet run --project src/SGCP.Api
+```
+
+1. La migración crea las tablas en SQL Server (`Datos/MigracionesSqlServer`).
+2. El primer arranque carga los datos de prueba: permisos, roles, la cuenta `admin` y el catálogo de ejemplo. La carga es idempotente.
+3. Swagger queda en `http://localhost:5081/swagger`. Inicia sesión con `POST /api/v1/auth/login`, pulsa **Authorize** y pega el token.
+4. Para comprobar la persistencia, detén la API, vuelve a iniciarla y repite `GET /api/v1/clientes/{id}`: los datos siguen en SQL Server.
 
 ## Equipo
 
@@ -240,6 +296,7 @@ Más reciente arriba.
 
 | Versión | Fecha | Sprint | Cambio | Autor |
 |---|---|---|---|---|
+| v4.1.3 | 2026-11-19 | 4 | Web III (W3-P1): sección de entrega al inicio del README (proyecto, versión de .NET, integrantes con usuario de GitHub, repositorio, recurso evaluado y pasos con SQL Server) y PDF de evidencias `docs/Evidencias_API_Integrador.pdf` armado con las capturas de `evidencias/WebIII` | Dario Haziel Tambo Parra |
 | v4.4.1 | 2026-11-18 | 4 | Web III (W3-P4): comentarios XML y respuestas de Swagger en Productos, Cotizaciones y Pedidos, contacto del equipo y 12 casos reproducibles en `pruebas/API_Integrador.http`, con preparación del historial comercial y comprobación de persistencia tras reiniciar la API; capturas en `evidencias/WebIII` | Victor Manuel Manrique Arancivia |
 | v4.2.0 | 2026-11-18 | 4 | Web III (W3-P2): Clientes como recurso REST. DTO de salida `ClienteRespuesta`; `POST` con 201 y `Location` en clientes, productos y cotizaciones; `DELETE clientes/{id}` con la regla `CLIENTE_CON_HISTORIAL` (409) y auditoría; `GET clientes/{id}/pedidos` con aislamiento del comprador; `ProducesResponseType` y comentarios en `ClientesController`; 20 comprobaciones nuevas en el verificador | Angel Sebastian Eguez Mur |
 | v4.1.2 | 2026-11-18 | 4 | SQL Server como segundo motor, elegible con `BaseDatos:Proveedor`: `SgcpContextSqlServer` con migración propia (`Datos/MigracionesSqlServer`) y script `database/EsquemaSqlServer.sql`; manejo de interbloqueos de SQL Server; verificador con `SGCP_SQLSERVER_TEST` y flujo de CI con SQL Server 2022. MySQL sigue siendo el motor por defecto y no cambia | Dario Haziel Tambo Parra |
