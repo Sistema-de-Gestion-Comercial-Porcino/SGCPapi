@@ -37,7 +37,7 @@ public static class DatosIniciales
             ["PRODUCCION"] = ["operacion.consultar", "catalogo.consultar", "produccion.consultar", "produccion.administrar", "inventario.consultar", "reportes.consultar"],
             ["ALMACEN"] = ["operacion.consultar", "catalogo.consultar", "produccion.consultar", "inventario.consultar", "inventario.administrar", "frio.administrar", "reportes.consultar"],
             ["ENTREGA"] = ["operacion.consultar", "catalogo.consultar", "entregas.administrar", "frio.administrar", "reportes.consultar"],
-            ["COMPRADOR"] = ["catalogo.consultar", "precios.consultar", "cotizaciones.consultar", "cotizaciones.responder", "pedidos.consultar", "reportes.consultar"]
+            ["COMPRADOR"] = ["catalogo.consultar", "precios.consultar", "cotizaciones.consultar", "cotizaciones.solicitar", "cotizaciones.responder", "pedidos.consultar", "reportes.consultar"]
         };
         foreach (var (nombre, codigos) in roles)
         {

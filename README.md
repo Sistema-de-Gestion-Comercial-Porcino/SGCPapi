@@ -83,6 +83,8 @@ Acceso, registro público de comprador, recuperación de contraseña, usuarios y
 
 Crear producto no crea stock. Una cotización rechazada o vencida no crea pedido. El precio del pedido procede de la cotización aceptada y el costo vigente se conserva al confirmar. Los cambios posteriores no recalculan su margen.
 
+**CU05 · Solicitud del comprador:** `POST cotizaciones/solicitudes` recibe productos y cantidades de su propia cuenta; `PUT cotizaciones/{id}/solicitud` permite corregirla antes de la revisión. Ventas prepara precios y vigencia, presenta la cotización y confirma el pedido después de la aceptación. [Contrato, actualización y comprobaciones](docs/CU05_SolicitudComprador.md).
+
 ## Requisitos
 
 - SDK .NET 10.

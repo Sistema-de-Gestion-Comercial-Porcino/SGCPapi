@@ -51,6 +51,7 @@ public class CotizacionesController(ServicioCotizaciones servicio, SgcpContext d
             x.Estado,
             x.Fecha,
             x.VigenteHasta,
+            PendienteRevision = x.VigenteHasta == null,
             x.ClienteId,
             Cliente = x.Cliente.Nombre
         }).Paginar(pagina, tamanoPagina));
@@ -77,6 +78,7 @@ public class CotizacionesController(ServicioCotizaciones servicio, SgcpContext d
             c.Version,
             c.Fecha,
             c.VigenteHasta,
+            PendienteRevision = c.VigenteHasta == null,
             c.Canal,
             c.Estado,
             c.MotivoRespuesta,
@@ -85,7 +87,7 @@ public class CotizacionesController(ServicioCotizaciones servicio, SgcpContext d
             c.CotizacionOrigenId,
             VersionPosterior = posterior,
             PedidoId = c.Pedido?.Id,
-            Total = c.Detalles.Sum(x => x.Subtotal),
+            Total = c.VigenteHasta is null ? (decimal?)null : c.Detalles.Sum(x => x.Subtotal),
             Detalles = c.Detalles.Select(x => new
             {
                 x.Id,
@@ -93,11 +95,33 @@ public class CotizacionesController(ServicioCotizaciones servicio, SgcpContext d
                 Producto = x.Producto.Nombre,
                 x.Cantidad,
                 x.Unidad,
-                x.PrecioUnitario,
-                x.Subtotal
+                PrecioUnitario = c.VigenteHasta is null ? (decimal?)null : x.PrecioUnitario,
+                Subtotal = c.VigenteHasta is null ? (decimal?)null : x.Subtotal
             })
         });
     }
+    /// <summary>Envía a Ventas una solicitud del comprador con productos y cantidades.</summary>
+    /// <response code="201">Solicitud propia en borrador, sin oferta ni pedido; Location permite consultarla.</response>
+    /// <response code="400">Datos inválidos, cliente inactivo o producto no disponible.</response>
+    [HttpPost("solicitudes"), Authorize(Policy = "cotizaciones.solicitar"), Authorize(Roles = "COMPRADOR")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Solicitar(SolicitudCotizacionPeticion p)
+    {
+        var id = await servicio.Solicitar(null, p);
+        return CreatedAtAction(nameof(Ver), new { id }, new { Id = id });
+    }
+
+    /// <summary>Modifica los productos y cantidades de una solicitud propia aún pendiente de revisión.</summary>
+    [HttpPut("{id:guid}/solicitud"), Authorize(Policy = "cotizaciones.solicitar"), Authorize(Roles = "COMPRADOR")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> EditarSolicitud(Guid id, SolicitudCotizacionPeticion p) =>
+        Ok(new { Id = await servicio.Solicitar(id, p) });
+
     /// <summary>Crea un borrador de cotización para un cliente activo.</summary>
     /// <param name="p">Cliente, canal, vigencia y productos cotizados.</param>
     /// <response code="201">Devuelve el identificador del borrador y su URL en la cabecera Location.</response>

@@ -36,6 +36,37 @@ public class ServicioCotizaciones(SgcpContext db,
         actor.VerCliente(c.ClienteId);
         return c;
     }
+    public Task<Guid> Solicitar(Guid? id, SolicitudCotizacionPeticion p) => unidad.Ejecutar(async () =>
+    {
+        if (!actor.Comprador || actor.ClienteId is not Guid clienteId)
+            throw new ReglaException("COMPRADOR_REQUERIDO", "Inicia sesión con una cuenta de comprador vinculada a un cliente.", 403);
+        if (!await db.Clientes.AnyAsync(x => x.Id == clienteId && x.Activo))
+            throw new ReglaException("CLIENTE_NO_ACTIVO", "Tu ficha de cliente está inactiva; contacta a Ventas.", 400);
+        if (p.Detalles is null || p.Detalles.Count is < 1 or > 100 || p.Detalles.Any(x => x is null))
+            throw new ReglaException("DATOS_INVALIDOS", "Selecciona entre 1 y 100 productos.", 400);
+
+        var c = id is null
+            ? new Cotizacion { Codigo = await codigos.SiguienteAsync("COT"), Fecha = DateTime.UtcNow,
+                ClienteId = clienteId, Canal = CanalSolicitud.PORTAL }
+            : await Obtener(id.Value);
+        if (c.Estado != EstadoCotizacion.BORRADOR || c.VigenteHasta is not null || c.Canal != CanalSolicitud.PORTAL)
+            throw new ReglaException("SOLICITUD_YA_REVISADA", "Ventas ya preparó esta cotización; solicita los cambios mediante su respuesta.");
+        await VerificarVersion(c.Id);
+        if (id is not null) db.DetallesCotizacion.RemoveRange(c.Detalles);
+        c.Detalles = new List<DetalleCotizacion>();
+        foreach (var d in p.Detalles)
+        {
+            if (d.Cantidad <= 0 || d.Cantidad > 999999.999m || d.Cantidad != decimal.Round(d.Cantidad, 3))
+                throw new ReglaException("CANTIDAD_INVALIDA", "Indica una cantidad positiva con hasta tres decimales.", 400);
+            var producto = await db.Productos.SingleOrDefaultAsync(x => x.Id == d.ProductoId && x.Activo)
+                ?? throw new ReglaException("PRODUCTO_NO_ACTIVO", "Uno de los productos ya no está disponible; revisa tu solicitud.", 400);
+            c.Detalles.Add(new DetalleCotizacion { ProductoId = producto.Id, Cantidad = d.Cantidad, Unidad = producto.UnidadVenta });
+        }
+        if (id is null) db.Cotizaciones.Add(c);
+        else db.DetallesCotizacion.AddRange(c.Detalles);
+        auditoria.Registrar(id is null ? "SOLICITAR" : "EDITAR_SOLICITUD", "Cotizacion", c.Id);
+        return c.Id;
+    });
     public Task<Guid> Guardar(Guid? id, CotizacionPeticion p) => unidad.Ejecutar(async () =>
     {
         if (!await db.Clientes.AnyAsync(x => x.Id == p.ClienteId && x.Activo))
@@ -73,6 +104,8 @@ public class ServicioCotizaciones(SgcpContext db,
         }
         if (id is null)
             db.Cotizaciones.Add(c);
+        else
+            db.DetallesCotizacion.AddRange(c.Detalles);
         auditoria.Registrar(id is null ? "CREAR" : "EDITAR", "Cotizacion", c.Id);
         return c.Id;
     });
@@ -80,6 +113,8 @@ public class ServicioCotizaciones(SgcpContext db,
     {
         var c = await Obtener(id);
         await VerificarVersion(id);
+        if (c.VigenteHasta is null)
+            throw new ReglaException("SOLICITUD_PENDIENTE", "Ventas debe revisar los productos, precios y vigencia antes de presentar la cotización.");
         var esperado = estado == EstadoCotizacion.PRESENTADA ? EstadoCotizacion.BORRADOR : EstadoCotizacion.PRESENTADA;
         if (c.VigenteHasta <= DateTime.UtcNow)
             throw new ReglaException("COTIZACION_NO_VIGENTE", "La cotización venció; prepara otra versión.");

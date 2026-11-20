@@ -88,7 +88,9 @@ public class ReportesFacade(SgcpContext db, ActorActual actor)
                             Total = x.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario)
                         }).Take(10001).ToListAsync();
                     tabla = new("Cotizaciones", ["Código", "Versión", "Fecha UTC", "Cliente", "Estado", "Vigente hasta UTC", "Total Bs"],
-                        filas.Select(x => new object?[] { x.Codigo, x.Version, x.Fecha, x.Cliente, x.Estado.ToString(), x.VigenteHasta, Consultas.Dinero(x.Total) }).ToList());
+                        filas.Select(x => new object?[] { x.Codigo, x.Version, x.Fecha, x.Cliente,
+                            x.VigenteHasta is null ? "PENDIENTE DE REVISIÓN" : x.Estado.ToString(), x.VigenteHasta,
+                            x.VigenteHasta is null ? (decimal?)null : Consultas.Dinero(x.Total) }).ToList());
                     break;
                 }
             case TipoReporte.PEDIDOS:

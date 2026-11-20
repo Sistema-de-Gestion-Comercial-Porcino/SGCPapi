@@ -501,7 +501,7 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
                     b.Property<int>("Version")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("VigenteHasta")
+                    b.Property<DateTime?>("VigenteHasta")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
