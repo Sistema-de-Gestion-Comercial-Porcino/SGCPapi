@@ -281,3 +281,42 @@ Accept: application/json
 GET {{crearCliente.response.headers.Location}}
 Authorization: Bearer {{login.response.body.$.token}}
 Accept: application/json
+
+### Seguimiento de cobro · GET seguimientos-cobro → 200
+# Requiere saldos.consultar. Filtra por cliente y estado.
+# @name listarSeguimientos
+GET {{api}}/seguimientos-cobro?pagina=1&tamanoPagina=20
+Authorization: Bearer {{login.response.body.$.token}}
+Accept: application/json
+
+### Seguimiento de cobro · POST condiciones-pago/{id}/seguimientos → 201
+# Solo si la condición es CREDITO_ACORDADO y el pedido tiene saldo. Contado o sin saldo responden 400.
+# Sustituye condicionPagoId por el id de una condición a crédito con saldo.
+# @name crearSeguimiento
+POST {{api}}/condiciones-pago/{{condicionPagoId}}/seguimientos
+Authorization: Bearer {{login.response.body.$.token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "proximaFecha": "2026-12-01T15:00:00Z"
+}
+
+### Seguimiento de cobro · POST seguimientos-cobro/{id}/gestion → 200
+# Con saldo vuelve a PENDIENTE. Con saldo en cero queda CERRADO. Cerrado responde 400.
+# @name gestionarSeguimiento
+POST {{api}}/seguimientos-cobro/{{crearSeguimiento.response.body.$.id}}/gestion
+Authorization: Bearer {{login.response.body.$.token}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "resultado": "Se acordó una nueva fecha de pago",
+  "proximaFecha": "2026-12-08T15:00:00Z"
+}
+
+### Seguimiento de cobro · POST seguimientos-cobro/{id}/cerrar → 204
+# Solo cuando el saldo del pedido es cero. Si sigue habiendo saldo, o ya está cerrado, responde 400.
+# @name cerrarSeguimiento
+POST {{api}}/seguimientos-cobro/{{crearSeguimiento.response.body.$.id}}/cerrar
+Authorization: Bearer {{login.response.body.$.token}}
