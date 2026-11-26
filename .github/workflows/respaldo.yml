@@ -1,0 +1,37 @@
+name: Respaldo y restauración MySQL
+on:
+  pull_request:
+    paths: ['scripts/**', 'tests/respaldo/**', '.github/workflows/respaldo.yml']
+  push:
+    branches: [main, 'sprint5/p4-respaldo']
+    paths: ['scripts/**', 'tests/respaldo/**', '.github/workflows/respaldo.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  restauracion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Sintaxis y restauración aislada en MySQL 8
+        shell: bash
+        run: |
+          bash -n scripts/respaldo.sh scripts/restaurar.sh tests/respaldo/verificar.sh
+          # El contenedor no expone puertos. La cuenta temporal no tiene clave
+          # y solo existe dentro de este contenedor efímero de verificación.
+          docker run -d --name sgcp-respaldo -e MYSQL_ALLOW_EMPTY_PASSWORD=yes mysql:8.4
+          for intento in $(seq 1 60); do
+            if docker exec sgcp-respaldo mysqladmin --protocol=TCP -h127.0.0.1 -uroot ping --silent >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          docker exec sgcp-respaldo mysqladmin --protocol=TCP -h127.0.0.1 -uroot ping --silent
+          docker cp scripts sgcp-respaldo:/tmp/scripts
+          docker exec sgcp-respaldo mkdir -p /tmp/tests
+          docker cp tests/respaldo sgcp-respaldo:/tmp/tests/respaldo
+          docker exec -e MYSQL_USER=root sgcp-respaldo bash /tmp/tests/respaldo/verificar.sh
+      - name: Retirar contenedor temporal
+        if: always()
+        run: docker rm -f sgcp-respaldo
