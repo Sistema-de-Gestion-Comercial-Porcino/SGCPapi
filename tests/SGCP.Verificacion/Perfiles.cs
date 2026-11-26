@@ -48,16 +48,29 @@ public static class Perfiles
         var owner = await Ok("POST", "usuarios", Cuenta("propietario.perfil", "PROPIETARIO"));
         var operador = await Ok("POST", "usuarios", Cuenta("administrador.perfil", "ADMINISTRADOR", "VENTAS"));
         var otro = await Ok("POST", "usuarios", Cuenta("operador.perfil", "PRODUCCION"));
+        await Ok("POST", "usuarios", Cuenta("finanzas.perfil", "FINANZAS"));
         Check((await Call("POST", $"usuarios/{rootId}/estado", new { estado = "DESHABILITADO" })).Datos?["codigo"]?.ToString() == "ULTIMO_ADMINISTRADOR", "Último superadmin protegido");
         var a = await Login("administrador.perfil");
         var permisos = a["usuario"]!["permisos"]!.AsArray().Select(p=>p!.ToString()).ToArray();
         Check(!permisos.Contains("costos.consultar") && !permisos.Contains("pagos.administrar"), "Administrador + Ventas no obtiene finanzas indirectamente");
+        Check(!permisos.Contains("saldos.consultar") && (await Call("GET", "saldos")).Estado == 403,
+            "ADMINISTRADOR sigue sin saldos.consultar");
         Check((await Call("GET", "auditoria")).Estado == 403, "Administrador sin auditoría estratégica");
         Check((await Call("POST", "usuarios", Cuenta("escalamiento.perfil", "SUPERADMIN"))).Estado == 403, "Administrador no crea superadmins");
         Check((await Call("POST", $"usuarios/{owner["id"]}/estado", new { estado = "DESHABILITADO" })).Estado == 403, "Administrador no desactiva propietario");
         Check((await Call("POST", $"usuarios/{operador["id"]}/estado", new { estado = "DESHABILITADO" })).Estado == 403, "Administrador no cambia sus privilegios");
         Check((await Call("POST", "usuarios", Cuenta("empleado.perfil", "ALMACEN"))).Estado == 201, "Administrador crea empleados operativos");
         Check((await Call("POST", "usuarios", Cuenta("finanzas.ilegal", "FINANZAS"))).Estado == 403, "Administrador no concede autorización financiera");
+        var finanzas = await Login("finanzas.perfil");
+        var permisosFinanzas = finanzas["usuario"]!["permisos"]!.AsArray().Select(p => p!.ToString()).ToHashSet();
+        Check(new[] { "clientes.consultar", "catalogo.consultar", "pedidos.consultar", "precios.consultar", "reportes.consultar" }.All(permisosFinanzas.Contains)
+            && (await Call("GET", "clientes")).Estado == 200 && (await Call("GET", "productos")).Estado == 200,
+            "FINANZAS consulta clientes y catálogo para cobrar");
+        Check((await Call("GET", "pedidos")).Estado == 200 && (await Call("GET", "saldos")).Estado == 200
+            && (await Call("GET", "seguimientos-cobro")).Estado == 200 && (await Call("GET", "reportes")).Estado == 200,
+            "FINANZAS consulta pedidos, saldos, seguimientos y reportes");
+        Check(!permisosFinanzas.Contains("usuarios.administrar") && !permisosFinanzas.Contains("catalogo.administrar"),
+            "FINANZAS no recibe administración de usuarios ni catálogo");
         await Login("propietario.perfil");
         Check((await Call("POST", "usuarios", Cuenta("nuevo.admin.perfil", "ADMINISTRADOR"))).Estado == 201, "Propietario crea administradores");
         Check((await Call("POST", $"usuarios/{rootId}/estado", new { estado = "BLOQUEADO" })).Estado == 403, "Propietario no bloquea superadmin");
