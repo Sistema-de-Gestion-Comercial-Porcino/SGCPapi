@@ -29,7 +29,7 @@ public static class DatosIniciales
                 "catalogo.consultar", "catalogo.administrar", "precios.consultar", "operacion.consultar",
                 "produccion.consultar", "produccion.administrar", "inventario.consultar", "inventario.administrar",
                 "frio.administrar", "entregas.administrar", "entregas.revisar", "reportes.consultar"],
-            ["FINANZAS"] = RolesSistema.Financieros,
+            ["FINANZAS"] = [.. RolesSistema.Financieros, "clientes.consultar", "catalogo.consultar", "pedidos.consultar", "precios.consultar", "reportes.consultar"],
             ["VENTAS"] = ["clientes.consultar", "clientes.administrar", "catalogo.consultar", "costos.consultar",
                 "precios.consultar", "cotizaciones.consultar", "cotizaciones.administrar", "cotizaciones.responder",
                 "pedidos.consultar", "pedidos.administrar", "cargos.administrar", "pagos.administrar", "saldos.consultar",
