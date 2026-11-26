@@ -1,0 +1,2 @@
+scripts/*.sh text eol=lf
+tests/respaldo/*.sh text eol=lf
