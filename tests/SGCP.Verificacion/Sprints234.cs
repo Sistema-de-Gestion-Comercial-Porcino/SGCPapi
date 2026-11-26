@@ -791,6 +791,16 @@ public static class Sprints234
         });
         Check(creado.Estado == 201, "Crear seguimiento de cobro responde 201");
         var seguimiento = Id(creado.Json!);
+        var filasSeguimiento = (await Ok("GET", "seguimientos-cobro?clienteId=" + cliente + "&estado=PENDIENTE"))["elementos"]!.AsArray();
+        var filaSeguimiento = filasSeguimiento.Single(x => Id(x!) == seguimiento)!;
+        Check(filaSeguimiento["pedidoId"]!.ToString() == pedidoCobro
+            && filaSeguimiento["clienteId"]!.ToString() == cliente
+            && !string.IsNullOrWhiteSpace(filaSeguimiento["pedido"]!.ToString())
+            && !string.IsNullOrWhiteSpace(filaSeguimiento["cliente"]!.ToString())
+            && filaSeguimiento["vencimiento"] is not null,
+            "Seguimientos paginados incluyen cliente, pedido y vencimiento para la web");
+        Check(!(await Ok("GET", "seguimientos-cobro?estado=CERRADO"))["elementos"]!.AsArray().Any(x => Id(x!) == seguimiento),
+            "Filtro de seguimientos excluye los estados distintos");
         var gestionPendiente = await Ok("POST", "seguimientos-cobro/" + seguimiento + "/gestion", new
         {
             resultado = "El cliente pidió una nueva fecha",
