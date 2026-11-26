@@ -81,7 +81,6 @@ public class FinanzasController(SgcpContext db, ServicioFinanzas servicio) : Con
     /// <param name="pagina">Página desde 1.</param>
     /// <param name="tamanoPagina">10, 20, 50 o 100.</param>
     [HttpGet("seguimientos-cobro"), Authorize(Policy = "saldos.consultar")]
-    [ProducesResponseType(typeof(ResultadoPaginado<SeguimientoCobro>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorRespuesta), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Seguimientos(Guid? clienteId, EstadoSeguimiento? estado, int pagina = 1, int tamanoPagina = 20)
     {
@@ -89,7 +88,15 @@ public class FinanzasController(SgcpContext db, ServicioFinanzas servicio) : Con
         if (clienteId is not null)
             q = q.Where(x => db.CondicionesPago.Any(c => c.Id == x.CondicionPagoId
                 && db.Pedidos.Any(p => p.Id == c.PedidoId && p.ClienteId == clienteId)));
-        return Ok(await q.OrderBy(x => x.ProximaFecha).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
+        // Conserva los campos existentes y resuelve las etiquetas en una consulta paginada.
+        var filas = from s in q
+                    join c in db.CondicionesPago on s.CondicionPagoId equals c.Id
+                    join p in db.Pedidos on c.PedidoId equals p.Id
+                    join cliente in db.Clientes on p.ClienteId equals cliente.Id
+                    orderby s.ProximaFecha, s.Id
+                    select new { s.Id, s.CondicionPagoId, s.FechaGestion, s.Resultado, s.ProximaFecha, s.Estado,
+                        PedidoId = p.Id, Pedido = p.Codigo, p.ClienteId, Cliente = cliente.Nombre, c.Vencimiento };
+        return Ok(await filas.Paginar(pagina, tamanoPagina));
     }
 
     /// <summary>Abre un seguimiento en PENDIENTE para una condición a crédito con saldo pendiente.</summary>
