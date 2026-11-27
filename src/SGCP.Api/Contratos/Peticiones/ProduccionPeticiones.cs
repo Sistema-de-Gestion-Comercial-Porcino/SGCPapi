@@ -28,6 +28,6 @@ public record EntradaPeticion(Guid PesajeId, [Required, StringLength(180)] strin
 public record ReservaPeticion(Guid DetallePedidoId, Guid ExistenciaId, decimal Cantidad);
 public record FrioPeticion(Guid? LoteId, decimal Temperatura, [property: JsonRequired] EvaluacionFrio Evaluacion,
     [Required, StringLength(180)] string Ubicacion, DateTime Fecha,
-    [Required, StringLength(1000)] string Observacion, Guid? EntregaId = null);
+    [Required, StringLength(1000)] string Observacion, Guid? EntregaId = null, DateTime? InicioFalla = null);
 public record CargoPeticion(Guid PedidoId, [Required, StringLength(300)] string Concepto, decimal Importe,
     [Required, StringLength(300)] string AcuerdoServicio, DateTime PrestadoEn);

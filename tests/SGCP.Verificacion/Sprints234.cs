@@ -140,7 +140,7 @@ public static class Sprints234
         {
             resultados = new[] { new { productoId = costilla, codigoLote = "DUP", vencimiento = DateTime.UtcNow.AddDays(10) } }
         }), "No se confirma dos veces la producción");
-        async Task<(string Pesaje, string Entrada, string Existencia)> Ingresar(string lote, decimal bruto)
+        async Task<(string Pesaje, string Entrada, string Existencia)> Ingresar(string lote, decimal bruto, string ubicacion = "Cámara 1")
         {
             var peso = Id(await Ok("POST", "pesajes", new
             {
@@ -154,7 +154,7 @@ public static class Sprints234
             var entrada = Id(await Ok("POST", "entradas-inventario", new
             {
                 pesajeId = peso,
-                ubicacion = "Cámara 1"
+                ubicacion
             }));
             var e = (await Ok("GET", "existencias"))["elementos"]!.AsArray().Single(x => x!["loteId"]!.ToString() == lote)!;
             Check(e["cantidadFisica"]!.GetValue<decimal>() == bruto - 0.125m, "Entrada física suma neto exacto con tres decimales");
@@ -288,6 +288,108 @@ public static class Sprints234
             fecha = DateTime.UtcNow
         });
         Check((await Ok("GET", "ordenes-produccion/" + ordenAnulada))["orden"]!["estado"]!.ToString() == "ANULADA", "Una orden anulada no pasa a bloqueada al rechazar el animal");
+        // Revisión del 26 nov: sanidad, consumo irreversible, falla de cámara con hora de inicio, nombres y responsables.
+        Check(await Error("ANIMAL_NO_REHABILITABLE", "POST", "animales/" + animalAnulada + "/controles-sanitarios", new
+        {
+            resultado = "RECHAZADO",
+            observacion = "Segundo rechazo",
+            fecha = DateTime.UtcNow
+        }), "Un animal ya rechazado no se rechaza otra vez");
+        Check((await Ok("GET", "incidencias?tamanoPagina=100"))["elementos"]!.AsArray().Count(x => x!["animalId"]?.ToString() == animalAnulada) == 1,
+            "El rechazo repetido no duplica la incidencia");
+        var animalApto = Id(await Ok("POST", "animales", new { identificacion = "AN-APTO-RECH", procedencia = "Granja", proveedor = "Proveedor", pesoIngreso = 92 }));
+        await Ok("POST", "animales/" + animalApto + "/controles-sanitarios", new { resultado = "APROBADO", observacion = "Sin novedad", fecha = DateTime.UtcNow.AddMinutes(-3) });
+        Check(await Error("MOTIVO_REQUERIDO", "POST", "animales/" + animalApto + "/controles-sanitarios", new
+        {
+            resultado = "RECHAZADO",
+            observacion = "x",
+            fecha = DateTime.UtcNow.AddMinutes(-2)
+        }), "Rechazar un animal apto exige explicar qué le pasó");
+        await Ok("POST", "animales/" + animalApto + "/controles-sanitarios", new { resultado = "RECHAZADO", observacion = "Cojera tras el transporte", fecha = DateTime.UtcNow.AddMinutes(-1) });
+        Check((await Ok("GET", "incidencias?tamanoPagina=100"))["elementos"]!.AsArray().Single(x => x!["animalId"]?.ToString() == animalApto)!["motivo"]!.ToString()
+            == "Pasó de apto a rechazado: Cojera tras el transporte", "La incidencia explica el paso de apto a rechazado");
+        var filtrados = (await Ok("GET", "animales?busqueda=AN-APTO"))["elementos"]!.AsArray();
+        Check(filtrados.Count == 1 && Id(filtrados[0]!) == animalApto, "Sanidad filtra animales por identificación (arete)");
+        var externoFrio = Id(await Ok("POST", "lotes/externos", new
+        {
+            productoId = costilla,
+            codigo = "L-EXT-FRIO",
+            referencia = "GUIA-FRIO",
+            procedencia = "Proveedor externo",
+            fechaProduccion = DateTime.UtcNow.AddDays(-1),
+            vencimiento = DateTime.UtcNow.AddDays(5)
+        }));
+        var stockFrio = await Ingresar(externoFrio, 6.125m, "Cámara 7");
+        var fabAntes = Id(await Ok("POST", "ordenes-produccion", Orden(null, "FABRICACION")));
+        await Ok("POST", "ordenes-produccion/" + fabAntes + "/iniciar");
+        await Ok("POST", "ordenes-produccion/" + fabAntes + "/consumos", new { existenciaId = stockFrio.Existencia, cantidad = 1m, referenciaUnica = Guid.NewGuid() });
+        Check(await Error("ORDEN_CON_CONSUMOS", "POST", "ordenes-produccion/" + fabAntes + "/anular", new { motivo = "Se quiere anular después de consumir" }),
+            "Una fabricación con consumos no se anula: el consumo es irreversible");
+        var derivadoAntes = (await Ok("POST", "ordenes-produccion/" + fabAntes + "/confirmar", new
+        {
+            resultados = new[] { new { productoId = jamon, codigoLote = "L-JAM-ANTES", vencimiento = DateTime.UtcNow.AddDays(20) } }
+        }))["lotes"]![0]!.ToString();
+        await Ingresar(derivadoAntes, 1.125m, "Cámara 8");
+        await Task.Delay(1200);
+        var inicioFalla = DateTime.UtcNow;
+        await Task.Delay(1200);
+        var fabDespues = Id(await Ok("POST", "ordenes-produccion", Orden(null, "FABRICACION")));
+        await Ok("POST", "ordenes-produccion/" + fabDespues + "/iniciar");
+        await Ok("POST", "ordenes-produccion/" + fabDespues + "/consumos", new { existenciaId = stockFrio.Existencia, cantidad = 1m, referenciaUnica = Guid.NewGuid() });
+        var derivadoDespues = (await Ok("POST", "ordenes-produccion/" + fabDespues + "/confirmar", new
+        {
+            resultados = new[] { new { productoId = jamon, codigoLote = "L-JAM-DESPUES", vencimiento = DateTime.UtcNow.AddDays(20) } }
+        }))["lotes"]![0]!.ToString();
+        await Ingresar(derivadoDespues, 1.125m, "Cámara 8");
+        Token(almacen.Token);
+        Check(await Error("INICIO_FALLA_REQUERIDO", "POST", "controles-frio", new
+        {
+            temperatura = 9m, evaluacion = "RECHAZADO", ubicacion = "Cámara 7", fecha = DateTime.UtcNow, observacion = "Sin hora de inicio"
+        }), "Rechazar una cámara exige la hora de inicio de la falla");
+        await Ok("POST", "controles-frio", new
+        {
+            temperatura = 9m, evaluacion = "RECHAZADO", ubicacion = "Cámara 7", fecha = DateTime.UtcNow, inicioFalla = inicioFalla,
+            observacion = "Registro de la cámara revisado: sin frío desde la hora indicada"
+        });
+        var lotesFrio = (await Ok("GET", "lotes?tamanoPagina=100"))["elementos"]!.AsArray();
+        string EstadoLote(string id) => lotesFrio.Single(x => Id(x!) == id)!["estado"]!.ToString();
+        Check(EstadoLote(externoFrio) == "BLOQUEADO", "La falla de la cámara bloquea el lote que estaba dentro");
+        Check(EstadoLote(derivadoAntes) == "APTO", "El derivado que consumió antes del inicio de la falla sigue apto");
+        Check(EstadoLote(derivadoDespues) == "BLOQUEADO", "El derivado que consumió después del inicio de la falla queda bloqueado");
+        Check(EstadoLote(lote1) == "APTO", "Los lotes de otra cámara no se tocan");
+        Check((await Ok("GET", "incidencias?tamanoPagina=100"))["elementos"]!.AsArray()
+            .Any(x => x!["loteId"]?.ToString() == externoFrio && x["motivo"]!.ToString().StartsWith("Falla de frío en Cámara 7 desde")),
+            "La incidencia del lote indica la cámara y desde cuándo falló");
+        Token(token);
+        var externoMinuto = Id(await Ok("POST", "lotes/externos", new
+        {
+            productoId = costilla,
+            codigo = "L-EXT-MINUTO",
+            referencia = "GUIA-MINUTO",
+            procedencia = "Proveedor externo",
+            fechaProduccion = DateTime.UtcNow.AddDays(-1),
+            vencimiento = DateTime.UtcNow.AddDays(5)
+        }));
+        await Ingresar(externoMinuto, 2m, "Cámara 9");
+        // La web manda la lectura al minuto: un lote que entró segundos después de HH:mm:00 también estuvo en la cámara.
+        var ahora = DateTime.UtcNow;
+        var lecturaMinuto = new DateTime(ahora.Year, ahora.Month, ahora.Day, ahora.Hour, ahora.Minute, 0, DateTimeKind.Utc);
+        Token(almacen.Token);
+        await Ok("POST", "controles-frio", new
+        {
+            temperatura = 10m, evaluacion = "RECHAZADO", ubicacion = "Cámara 9", fecha = lecturaMinuto, inicioFalla = lecturaMinuto.AddHours(-1),
+            observacion = "Lectura anotada al minuto"
+        });
+        Check((await Ok("GET", "lotes?tamanoPagina=100"))["elementos"]!.AsArray().Single(x => Id(x!) == externoMinuto)!["estado"]!.ToString() == "BLOQUEADO",
+            "Un lote que entró en el mismo minuto de la lectura también queda en revisión");
+        var conIngreso = (await Ok("GET", "existencias?tamanoPagina=100"))["elementos"]!.AsArray().Single(x => Id(x!) == stockFrio.Existencia)!;
+        Check(conIngreso["ingreso"] is not null && conIngreso["ingresoResponsableId"]!.ToString() == admin && conIngreso["procedencia"]!.ToString() == "Proveedor externo",
+            "Existencias dice quién ingresó el lote a la cámara, cuándo y de dónde viene");
+        Token(produccion.Token);
+        var nombres = (await Ok("GET", "usuarios/nombres")).AsArray();
+        Check(nombres.Any(x => Id(x!) == almacen.Id && x!["nombre"]!.ToString() == "almacen.test") && nombres.All(x => x!.AsObject().Count == 2),
+            "Producción ve el nombre de quien registró, sin login ni otros datos");
+        Token(token);
         await Ok("POST", "auth/registro-comprador", new
         {
             nombre = "Comprador S234",
@@ -536,7 +638,20 @@ public static class Sprints234
         Check(entregas.Single(x => Id(x!) == entrega)!["estado"]!.ToString() == "ENTREGADA", "Recepción conforme cambia estado a ENTREGADA");
         Check(entregas.Single(x => Id(x!) == entrega2)!["estado"]!.ToString() == "DESPACHADA", "Conflicto no sobrescribe estado del servidor");
         Token(ventas.Token);
-        Check((await Call("GET", "entregas")).Estado == 403, "Ventas no administra entregas");
+        var localResp = (await Ok("GET", "responsables-entrega?modalidad=RETIRO_LOCAL")).AsArray();
+        var domicilioResp = (await Ok("GET", "responsables-entrega?modalidad=DOMICILIO")).AsArray();
+        Check(localResp.Any(x => Id(x!) == ventas.Id) && localResp.Any(x => Id(x!) == reparto.Id)
+            && domicilioResp.All(x => x!["rol"]!.ToString() == "ENTREGA") && domicilioResp.Any(x => Id(x!) == reparto.Id),
+            "Retiro en local lo atiende Ventas o un repartidor; a domicilio solo un repartidor");
+        Check((await Ok("GET", "entregas"))["elementos"]!.AsArray().Count == 0 && (await Call("GET", "rutas")).Estado == 403
+            && (await Call("GET", "transportes")).Estado == 403, "Ventas solo ve sus entregas de retiro en local; no administra rutas ni transportes");
+        var capturaVentas = await Call("POST", "recepciones/sincronizar", new
+        {
+            recepciones = new[] { new { claveUnica = Guid.NewGuid(), entregaId = entrega2, versionBase = 2, autorId = ventas.Id, fechaReal = DateTime.UtcNow,
+                pesoRecibido = 1.950m, unidad = "kg", conforme = true, receptor = "Cliente", observacion = "", evidencias = new[] { new { tipo = "image/png", contenidoBase64 = png } } } }
+        });
+        Check(capturaVentas.Estado == 403 && capturaVentas.Json?["codigo"]?.ToString() == "SIN_PERMISO" && capturaVentas.Json?["mensaje"]?.ToString()?.Contains("asignada") == true,
+            "Ventas registra recepciones de retiro en local, pero solo de entregas asignadas a su cuenta");
         var enConflicto = (await Ok("GET", "recepciones/conflictos"))["elementos"]!.AsArray().Single(x => Id(x!) == conflictoId)!;
         Check(enConflicto["versionEntrega"]!.GetValue<int>() == 2 && enConflicto["estadoEntrega"]!.ToString() == "DESPACHADA" && enConflicto["pedido"] is not null,
             "Ventas lee en la bandeja de conflictos la versión y el estado actuales de la entrega");

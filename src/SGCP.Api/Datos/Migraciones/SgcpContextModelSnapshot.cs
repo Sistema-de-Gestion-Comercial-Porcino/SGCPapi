@@ -385,6 +385,9 @@ namespace SGCP.Api.Datos.Migraciones
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("InicioFalla")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<Guid?>("LoteId")
                         .HasColumnType("char(36)");
 

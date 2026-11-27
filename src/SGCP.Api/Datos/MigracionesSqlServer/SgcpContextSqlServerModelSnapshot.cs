@@ -392,6 +392,9 @@ namespace SGCP.Api.Datos.MigracionesSqlServer
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("InicioFalla")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid?>("LoteId")
                         .HasColumnType("uniqueidentifier");
 

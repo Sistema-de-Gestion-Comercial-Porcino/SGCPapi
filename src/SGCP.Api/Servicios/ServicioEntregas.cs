@@ -44,16 +44,21 @@ public class ServicioEntregas(SgcpContext db, UnidadTrabajo unidad, ActorActual 
         return true;
     });
 
-    private async Task Responsable(Guid id)
+    /// <summary>A domicilio (y en una ruta) responde un repartidor (rol ENTREGA). En retiro en local responde el vendedor (VENTAS)
+    /// que atiende al cliente o, si está libre en el local, un repartidor.</summary>
+    private async Task Responsable(Guid id, ModalidadEntrega modalidad)
     {
+        var local = modalidad == ModalidadEntrega.RETIRO_LOCAL;
         if (!await db.Usuarios.AnyAsync(x => x.Id == id && x.Estado == EstadoUsuario.ACTIVO &&
-                x.Roles.Any(r => r.Nombre == "ENTREGA" || r.Nombre == "SUPERADMIN" || r.Nombre == "PROPIETARIO" || r.Nombre == "ADMINISTRADOR")))
-            throw new ReglaException("RESPONSABLE_INVALIDO", "Asigna una cuenta activa responsable de entrega.");
+                x.Roles.Any(r => r.Nombre == "ENTREGA" || (local && r.Nombre == "VENTAS"))))
+            throw new ReglaException("RESPONSABLE_INVALIDO", local
+                ? "En retiro en local responde un vendedor (Ventas) o un repartidor que esté en el local."
+                : "A domicilio responde un repartidor (Responsable de entrega).");
     }
 
     public Task<Guid> CrearRuta(RutaPeticion p) => unidad.Ejecutar(async () =>
     {
-        await Responsable(p.ResponsableId);
+        await Responsable(p.ResponsableId, ModalidadEntrega.DOMICILIO);
         if (!await db.Transportes.AnyAsync(x => x.Id == p.TransporteId && x.Activo))
             throw new ReglaException("TRANSPORTE_INACTIVO", "Selecciona un transporte activo.");
         if (p.Fecha.Kind != DateTimeKind.Utc || p.Fecha.Year < 2020)
@@ -78,7 +83,9 @@ public class ServicioEntregas(SgcpContext db, UnidadTrabajo unidad, ActorActual 
             ?? throw new ReglaException("NO_ENCONTRADO", "Pedido no encontrado.", 404);
         if (pedido.EstadoComercial != EstadoComercial.CONFIRMADO)
             throw new ReglaException("PEDIDO_NO_VIGENTE", "El pedido no está confirmado.");
-        await Responsable(p.ResponsableId);
+        if (p.Modalidad != ModalidadEntrega.RETIRO_LOCAL && !actor.Tiene("entregas.administrar"))
+            throw new ReglaException("SIN_PERMISO", "Ventas prepara solo retiros en el local; la entrega a domicilio la prepara Administración o Reparto.", 403);
+        await Responsable(p.ResponsableId, p.Modalidad);
         await ValidarRuta(p.RutaId, p.ResponsableId, p.Modalidad);
         if (p.FechaPrevista.Kind != DateTimeKind.Utc || p.FechaPrevista.Year < 2020 || p.OrdenEnRuta < 1)
             throw new ReglaException("ENTREGA_INVALIDA", "Indica fecha UTC y posición positiva.", 400);
@@ -165,8 +172,8 @@ public class ServicioEntregas(SgcpContext db, UnidadTrabajo unidad, ActorActual 
     public Task<bool> Reasignar(Guid id, ReasignarPeticion p) => unidad.Ejecutar(async () =>
     {
         Validar.Motivo(p.Motivo);
-        await Responsable(p.ResponsableId);
         var entrega = await Obtener(id);
+        await Responsable(p.ResponsableId, entrega.Modalidad);
         if (entrega.Version != p.VersionActual || entrega.Estado is EstadoEntrega.ENTREGADA or EstadoEntrega.OBSERVADA or EstadoEntrega.CANCELADA)
             throw new ReglaException("VERSION_CONFLICTO", "Actualiza la entrega; no se reasigna una recepción finalizada.");
         await ValidarRuta(p.RutaId, p.ResponsableId, entrega.Modalidad);

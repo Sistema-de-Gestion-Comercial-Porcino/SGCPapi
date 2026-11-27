@@ -32,4 +32,10 @@ public class ControlFrio
     {
         get; set;
     }
+    /// <summary>Desde cuándo la cámara o el lote estuvo fuera de temperatura, según la investigación del responsable.
+    /// Solo los consumos y movimientos posteriores a esta hora quedan comprometidos.</summary>
+    public DateTime? InicioFalla
+    {
+        get; set;
+    }
 }

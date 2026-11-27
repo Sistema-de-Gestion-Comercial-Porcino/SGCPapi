@@ -40,6 +40,10 @@ public class InventarioController(SgcpContext db, ServicioInventario servicio) :
                     e.CantidadFisica,
                     l.Estado,
                     l.Vencimiento,
+                    l.Procedencia,
+                    Orden = db.OrdenesProduccion.Where(o => o.Id == l.OrdenProduccionId).Select(o => o.Codigo).FirstOrDefault(),
+                    Ingreso = db.EntradasInventario.Where(i => i.ExistenciaId == e.Id).Select(i => (DateTime?)i.Fecha).FirstOrDefault(),
+                    IngresoResponsableId = db.EntradasInventario.Where(i => i.ExistenciaId == e.Id).Select(i => (Guid?)i.ResponsableId).FirstOrDefault(),
                     Reservada = db.Reservas.Where(r => r.ExistenciaId == e.Id && r.Estado == EstadoReserva.ACTIVA).Sum(r => (decimal?)r.Cantidad) ?? 0,
                     Disponible = l.Estado == EstadoLote.APTO && l.Vencimiento > ahora ? e.CantidadFisica -
                         (db.Reservas.Where(r => r.ExistenciaId == e.Id && r.Estado == EstadoReserva.ACTIVA).Sum(r => (decimal?)r.Cantidad) ?? 0) : 0

@@ -79,6 +79,24 @@ public class RolesController(SgcpContext db, ActorActual actor) : ControllerBase
         x.Operacion,
         x.Entidad,
         x.EntidadId,
-        Usuario = x.Usuario.Login
+        Usuario = x.Usuario.Login,
+        NombreUsuario = x.Usuario.Nombre
     }).Paginar(pagina, tamanoPagina));
+}
+
+/// <summary>Nombre visible de las cuentas del personal, para mostrar quién registró cada operación. Solo id y nombre:
+/// sin login, correo, teléfono ni documento. No incluye clientes compradores.</summary>
+[ApiController, Route("api/v1/usuarios/nombres"), Authorize]
+public class NombresUsuariosController(SgcpContext db, ActorActual actor) : ControllerBase
+{
+    [HttpGet]
+    public async Task<IActionResult> Listar()
+    {
+        if (actor.Principal.IsInRole("COMPRADOR") && !actor.Principal.Claims.Any(c => c.Type == "permiso" && c.Value == "operacion.consultar"))
+            return Forbid();
+        return Ok(await db.Usuarios.AsNoTracking()
+            .Where(x => x.Roles.Any(r => r.Nombre != "COMPRADOR"))
+            .OrderBy(x => x.Nombre)
+            .Select(x => new { x.Id, x.Nombre }).ToListAsync());
+    }
 }
