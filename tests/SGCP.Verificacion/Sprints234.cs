@@ -623,6 +623,13 @@ public static class Sprints234
             "Retiro en local lo atiende Ventas o un repartidor; a domicilio solo un repartidor");
         Check((await Ok("GET", "entregas"))["elementos"]!.AsArray().Count == 0 && (await Call("GET", "rutas")).Estado == 403
             && (await Call("GET", "transportes")).Estado == 403, "Ventas solo ve sus entregas de retiro en local; no administra rutas ni transportes");
+        var capturaVentas = await Call("POST", "recepciones/sincronizar", new
+        {
+            recepciones = new[] { new { claveUnica = Guid.NewGuid(), entregaId = entrega2, versionBase = 2, autorId = ventas.Id, fechaReal = DateTime.UtcNow,
+                pesoRecibido = 1.950m, unidad = "kg", conforme = true, receptor = "Cliente", observacion = "", evidencias = new[] { new { tipo = "image/png", contenidoBase64 = png } } } }
+        });
+        Check(capturaVentas.Estado == 403 && capturaVentas.Json?["codigo"]?.ToString() == "SIN_PERMISO" && capturaVentas.Json?["mensaje"]?.ToString()?.Contains("asignada") == true,
+            "Ventas registra recepciones de retiro en local, pero solo de entregas asignadas a su cuenta");
         var enConflicto = (await Ok("GET", "recepciones/conflictos"))["elementos"]!.AsArray().Single(x => Id(x!) == conflictoId)!;
         Check(enConflicto["versionEntrega"]!.GetValue<int>() == 2 && enConflicto["estadoEntrega"]!.ToString() == "DESPACHADA" && enConflicto["pedido"] is not null,
             "Ventas lee en la bandeja de conflictos la versión y el estado actuales de la entrega");

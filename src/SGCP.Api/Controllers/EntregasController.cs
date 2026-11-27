@@ -102,7 +102,7 @@ public class EntregasController(SgcpContext db, ServicioEntregas servicio, SGCP.
 [ApiController, Route("api/v1/recepciones"), Authorize]
 public class RecepcionesController(SgcpContext db, ServicioEntregas servicio, SGCP.Api.Seguridad.ActorActual actor) : ControllerBase
 {
-    [HttpPost("sincronizar"), Authorize(Policy = "entregas.administrar"), RequestSizeLimit(12582912)]
+    [HttpPost("sincronizar"), Authorize(Policy = "entregas.atender"), RequestSizeLimit(12582912)]
     public async Task<IActionResult> Sincronizar(SincronizarPeticion p) => Ok(new { Resultados = await servicio.Sincronizar(p) });
     [HttpGet("conflictos"), Authorize(Policy = "entregas.revisar")]
     public async Task<IActionResult> Conflictos(int pagina = 1, int tamanoPagina = 20) =>
