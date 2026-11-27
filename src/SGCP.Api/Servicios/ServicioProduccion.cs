@@ -46,21 +46,34 @@ public class ServicioProduccion(SgcpContext db, UnidadTrabajo unidad, ActorActua
         var animal = await db.Animales.FindAsync(id) ?? throw new ReglaException("NO_ENCONTRADO", "Animal no encontrado.", 404);
         if (await db.ControlesSanitarios.AnyAsync(x => x.AnimalId == id && x.Fecha >= p.Fecha))
             throw new ReglaException("CONTROL_FUERA_DE_ORDEN", "La fecha debe ser posterior al último control.");
-        if (p.Resultado == ResultadoSanitario.APROBADO && (animal.Estado == EstadoAnimal.BLOQUEADO || animal.Estado == EstadoAnimal.FAENADO))
+        // Un animal rechazado o faenado ya no admite controles: ni un «Aprobado» que lo rehabilite ni un segundo rechazo
+        // que duplique la incidencia.
+        if (animal.Estado == EstadoAnimal.BLOQUEADO)
+            throw new ReglaException("ANIMAL_NO_REHABILITABLE", p.Resultado == ResultadoSanitario.APROBADO
+                ? "No se revierte un bloqueo ni un faeneo mediante otro control."
+                : "El animal ya está rechazado: su incidencia está registrada y no se rechaza otra vez.");
+        if (animal.Estado == EstadoAnimal.FAENADO)
             throw new ReglaException("ANIMAL_NO_REHABILITABLE", "No se revierte un bloqueo ni un faeneo mediante otro control.");
-        var c = new ControlSanitario { AnimalId = id, Resultado = p.Resultado, Fecha = p.Fecha, Observacion = (p.Observacion?.Trim() ?? ""), ResponsableId = actor.Id };
+        var observacion = p.Observacion?.Trim() ?? "";
+        if (p.Resultado == ResultadoSanitario.RECHAZADO && observacion.Length < 3)
+            throw new ReglaException("MOTIVO_REQUERIDO", animal.Estado == EstadoAnimal.APTO
+                ? "El animal estaba apto: explica en la observación qué le pasó para rechazarlo ahora."
+                : "Explica en la observación el motivo del rechazo.", 400);
+        var estadoAnterior = animal.Estado;
+        var c = new ControlSanitario { AnimalId = id, Resultado = p.Resultado, Fecha = p.Fecha, Observacion = observacion, ResponsableId = actor.Id };
         db.ControlesSanitarios.Add(c);
         animal.Estado = p.Resultado == ResultadoSanitario.APROBADO ? EstadoAnimal.APTO : EstadoAnimal.BLOQUEADO;
         if (p.Resultado == ResultadoSanitario.RECHAZADO)
         {
-            db.Incidencias.Add(new Incidencia { AnimalId = id, Motivo = (p.Observacion?.Trim() ?? ""), Fecha = DateTime.UtcNow, ResponsableId = actor.Id });
+            var motivo = estadoAnterior == EstadoAnimal.APTO ? "Pasó de apto a rechazado: " + observacion : observacion;
+            db.Incidencias.Add(new Incidencia { AnimalId = id, Motivo = motivo, Fecha = DateTime.UtcNow, ResponsableId = actor.Id });
             var ordenes = await db.OrdenesProduccion.Where(x => x.AnimalId == id).ToListAsync();
             foreach (var orden in ordenes)
             {
                 if (orden.Estado is not (EstadoOrdenProduccion.CONFIRMADA or EstadoOrdenProduccion.ANULADA))
                     orden.Estado = EstadoOrdenProduccion.BLOQUEADA;
                 foreach (var lote in await db.Lotes.Where(x => x.OrdenProduccionId == orden.Id).Select(x => x.Id).ToListAsync())
-                    await inventario.BloquearLote(lote, (p.Observacion?.Trim() ?? ""));
+                    await inventario.BloquearLote(lote, observacion);
             }
         }
         auditoria.Registrar("CONTROL_SANITARIO", "Animal", id);
@@ -200,9 +213,12 @@ public class ServicioProduccion(SgcpContext db, UnidadTrabajo unidad, ActorActua
         var orden = await Orden(id);
         if (orden.Estado == EstadoOrdenProduccion.CONFIRMADA || orden.Estado == EstadoOrdenProduccion.ANULADA)
             throw new ReglaException("TRANSICION_INVALIDA", "No se anulan órdenes confirmadas o ya anuladas.");
+        // El consumo mezcla los insumos en el producto fabricado: no se separan ni se devuelven a su existencia.
+        if (await db.InsumosProduccion.AnyAsync(x => x.OrdenProduccionId == id))
+            throw new ReglaException("ORDEN_CON_CONSUMOS", "La orden ya consumió insumos: el consumo es irreversible y la orden no se anula. Confirma el resultado con lo realmente obtenido y pésalo en almacén.");
         orden.Estado = EstadoOrdenProduccion.ANULADA;
         orden.Observacion = motivo.Trim();
-        auditoria.Registrar("ANULAR_SIN_REVERTIR_CONSUMOS", "OrdenProduccion", id);
+        auditoria.Registrar("ANULAR", "OrdenProduccion", id);
         return true;
     });
 

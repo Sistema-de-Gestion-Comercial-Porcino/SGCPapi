@@ -11,57 +11,61 @@ using SGCP.Api.Servicios;
 namespace SGCP.Api.Controllers;
 
 
-[ApiController, Route("api/v1"), Authorize(Policy = "entregas.administrar")]
+[ApiController, Route("api/v1"), Authorize]
 public class EntregasController(SgcpContext db, ServicioEntregas servicio, SGCP.Api.Seguridad.ActorActual actor) : ControllerBase
 {
-    [HttpGet("transportes")]
+    [HttpGet("transportes"), Authorize(Policy = "entregas.administrar")]
     public async Task<IActionResult> Transportes(int pagina = 1, int tamanoPagina = 20) =>
         Ok(await db.Transportes.AsNoTracking().OrderBy(x => x.Codigo).Paginar(pagina, tamanoPagina));
-    [HttpPost("transportes")]
+    [HttpPost("transportes"), Authorize(Policy = "entregas.administrar")]
     public async Task<IActionResult> Transporte(TransportePeticion p) => StatusCode(201, new { Id = await servicio.Transporte(null, p) });
-    [HttpPut("transportes/{id:guid}")]
+    [HttpPut("transportes/{id:guid}"), Authorize(Policy = "entregas.administrar")]
     public async Task<IActionResult> Editar(Guid id, TransportePeticion p) => Ok(new { Id = await servicio.Transporte(id, p) });
-    [HttpPost("transportes/{id:guid}/estado")]
+    [HttpPost("transportes/{id:guid}/estado"), Authorize(Policy = "entregas.administrar")]
     public async Task<IActionResult> Estado(Guid id, EstadoPeticion p)
     {
         await servicio.EstadoTransporte(id, p.Activo);
         return NoContent();
     }
-    [HttpGet("responsables-entrega")]
-    public async Task<IActionResult> Responsables() => Ok(await db.Usuarios.AsNoTracking()
-        .Where(x => x.Estado == EstadoUsuario.ACTIVO && x.Roles.Any(r => r.Nombre == "ENTREGA" || r.Nombre == "SUPERADMIN" || r.Nombre == "PROPIETARIO" || r.Nombre == "ADMINISTRADOR"))
-        .Select(x => new { x.Id, x.Nombre }).ToListAsync());
-    [HttpGet("rutas")]
+    /// <summary>Quién puede responder por la entrega: a domicilio solo un repartidor (ENTREGA); en retiro en local, el vendedor
+    /// (VENTAS) que atiende o, si está libre en el local, un repartidor. Sin modalidad devuelve ambos con su rol.</summary>
+    [HttpGet("responsables-entrega"), Authorize(Policy = "entregas.atender")]
+    public async Task<IActionResult> Responsables(ModalidadEntrega? modalidad = null) => Ok(await db.Usuarios.AsNoTracking()
+        .Where(x => x.Estado == EstadoUsuario.ACTIVO && x.Roles.Any(r => r.Nombre == "ENTREGA" ||
+            (modalidad != ModalidadEntrega.DOMICILIO && r.Nombre == "VENTAS")))
+        .OrderBy(x => x.Nombre)
+        .Select(x => new { x.Id, x.Nombre, Rol = x.Roles.Any(r => r.Nombre == "ENTREGA") ? "ENTREGA" : "VENTAS" }).ToListAsync());
+    [HttpGet("rutas"), Authorize(Policy = "entregas.administrar")]
     public async Task<IActionResult> Rutas(int pagina = 1, int tamanoPagina = 20) => Ok(await db.Rutas.AsNoTracking()
         .Where(x => actor.GestionGlobal || actor.Principal.IsInRole("ADMINISTRADOR") || x.ResponsableId == actor.Id)
         .OrderByDescending(x => x.Fecha).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
-    [HttpPost("rutas")]
+    [HttpPost("rutas"), Authorize(Policy = "entregas.administrar")]
     public async Task<IActionResult> Ruta(RutaPeticion p) => StatusCode(201, new { Id = await servicio.CrearRuta(p) });
-    [HttpPost("rutas/{id:guid}/finalizar")]
+    [HttpPost("rutas/{id:guid}/finalizar"), Authorize(Policy = "entregas.administrar")]
     public async Task<IActionResult> Finalizar(Guid id)
     {
         await servicio.FinalizarRuta(id);
         return NoContent();
     }
-    [HttpGet("entregas")]
+    [HttpGet("entregas"), Authorize(Policy = "entregas.atender")]
     public async Task<IActionResult> Entregas(int pagina = 1, int tamanoPagina = 20) => Ok(await db.Entregas.AsNoTracking()
         .Where(x => actor.GestionGlobal || actor.Principal.IsInRole("ADMINISTRADOR") || x.ResponsableId == actor.Id)
         .OrderByDescending(x => x.FechaPrevista).ThenBy(x => x.Id).Paginar(pagina, tamanoPagina));
-    [HttpPost("entregas")]
+    [HttpPost("entregas"), Authorize(Policy = "entregas.atender")]
     public async Task<IActionResult> Preparar(EntregaPeticion p) => StatusCode(201, new { Id = await servicio.Preparar(p) });
-    [HttpPost("entregas/{id:guid}/despachar")]
+    [HttpPost("entregas/{id:guid}/despachar"), Authorize(Policy = "entregas.atender")]
     public async Task<IActionResult> Despachar(Guid id)
     {
         await servicio.Despachar(id);
         return NoContent();
     }
-    [HttpPost("entregas/{id:guid}/reasignar"), Authorize(Policy = "entregas.revisar")]
+    [HttpPost("entregas/{id:guid}/reasignar"), Authorize(Policy = "entregas.administrar"), Authorize(Policy = "entregas.revisar")]
     public async Task<IActionResult> Reasignar(Guid id, ReasignarPeticion p)
     {
         await servicio.Reasignar(id, p);
         return NoContent();
     }
-    [HttpGet("mis-entregas")]
+    [HttpGet("mis-entregas"), Authorize(Policy = "entregas.administrar")]
     public async Task<IActionResult> Asignadas()
     {
         var entregas = await (from e in db.Entregas.AsNoTracking()

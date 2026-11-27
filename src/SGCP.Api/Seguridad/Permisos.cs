@@ -18,6 +18,6 @@ public static class Permisos
             "pedidos.administrar",
             "operacion.consultar", "precios.consultar", "produccion.consultar", "produccion.administrar",
             "inventario.consultar", "inventario.administrar", "frio.administrar", "cargos.administrar",
-            "pagos.administrar", "saldos.consultar", "entregas.administrar", "entregas.revisar",
+            "pagos.administrar", "saldos.consultar", "entregas.administrar", "entregas.revisar", "entregas.atender",
             "reportes.consultar", "fiscal.administrar"];
 }

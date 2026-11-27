@@ -187,7 +187,13 @@ public class ServicioInventario(SgcpContext db, UnidadTrabajo unidad, ActorActua
         return true;
     });
 
-    public async Task BloquearLote(Guid id, string motivo, HashSet<Guid>? visitados = null)
+    /// <summary>Bloquea el lote (en revisión), libera sus reservas, abre su incidencia y alcanza a los derivados que lo consumieron.</summary>
+    /// <param name="id">Lote que se bloquea.</param>
+    /// <param name="motivo">Texto de la incidencia.</param>
+    /// <param name="visitados">Lotes ya recorridos en la cascada.</param>
+    /// <param name="desde">Si se conoce cuándo empezó el problema, solo los consumos posteriores contaminan a los derivados;
+    /// sin fecha, por precaución, se bloquea todo derivado que consumió del lote.</param>
+    public async Task BloquearLote(Guid id, string motivo, HashSet<Guid>? visitados = null, DateTime? desde = null)
     {
         visitados ??= [];
         if (!visitados.Add(id))
@@ -209,7 +215,8 @@ public class ServicioInventario(SgcpContext db, UnidadTrabajo unidad, ActorActua
             var pedido = (await db.Pedidos.FindAsync(detalle.PedidoId))!;
             pedido.EstadoPreparacion = EstadoPreparacion.BLOQUEADO;
         }
-        var ordenes = await db.InsumosProduccion.Where(x => existencias.Contains(x.ExistenciaId)).Select(x => x.OrdenProduccionId).Distinct().ToListAsync();
+        var ordenes = await db.InsumosProduccion.Where(x => existencias.Contains(x.ExistenciaId) && (desde == null || x.Fecha >= desde))
+            .Select(x => x.OrdenProduccionId).Distinct().ToListAsync();
         foreach (var ordenId in ordenes)
         {
             var orden = (await db.OrdenesProduccion.FindAsync(ordenId))!;
@@ -245,12 +252,23 @@ public class ServicioInventario(SgcpContext db, UnidadTrabajo unidad, ActorActua
     public Task<Guid> Frio(FrioPeticion p) => unidad.Ejecutar(async () =>
     {
         Validar.FechaReal(p.Fecha);
+        if (p.InicioFalla is DateTime inicio)
+        {
+            Validar.FechaReal(inicio);
+            if (inicio > p.Fecha)
+                throw new ReglaException("INICIO_FALLA_INVALIDO", "El inicio de la falla debe ser anterior o igual a la hora de la lectura.", 400);
+        }
+        var camara = p.LoteId is null && p.EntregaId is null;
+        if (camara && !actor.Tiene("inventario.administrar"))
+            throw new ReglaException("SIN_PERMISO", "El control de una cámara completa requiere permiso de inventario.", 403);
+        if (camara && p.Evaluacion == EvaluacionFrio.RECHAZADO && p.InicioFalla is null)
+            throw new ReglaException("INICIO_FALLA_REQUERIDO", "Para rechazar una cámara indica desde qué hora estuvo fuera de temperatura (tras revisar su registro).", 400);
         if (p.Temperatura < -100 || p.Temperatura > 100 || decimal.Round(p.Temperatura, 2) != p.Temperatura)
             throw new ReglaException("TEMPERATURA_INVALIDA", "Registra una temperatura en °C entre -100 y 100, con hasta dos decimales.", 400);
         if (p.LoteId is not null && !actor.Tiene("inventario.administrar"))
             throw new ReglaException("SIN_PERMISO", "El control de lotes en almacén requiere permiso de inventario.", 403);
-        if ((p.LoteId is null) == (p.EntregaId is null))
-            throw new ReglaException("REFERENCIA_FRIO_INVALIDA", "Indica un lote o una entrega, no ambos.", 400);
+        if (p.LoteId is not null && p.EntregaId is not null)
+            throw new ReglaException("REFERENCIA_FRIO_INVALIDA", "Indica un lote, una entrega o solo la cámara, no varios a la vez.", 400);
         if (p.EntregaId is not null)
         {
             var entrega = await db.Entregas.FindAsync(p.EntregaId) ?? throw new ReglaException("NO_ENCONTRADO", "Entrega no encontrada.", 404);
@@ -268,13 +286,16 @@ public class ServicioInventario(SgcpContext db, UnidadTrabajo unidad, ActorActua
             Ubicacion = p.Ubicacion.Trim(),
             Observacion = (p.Observacion?.Trim() ?? ""),
             Fecha = p.Fecha,
+            InicioFalla = p.InicioFalla,
             ResponsableId = actor.Id
         };
         db.ControlesFrio.Add(control);
         if (p.Evaluacion == EvaluacionFrio.RECHAZADO)
         {
-            if (p.LoteId is Guid loteId)
-                await BloquearLote(loteId, (p.Observacion?.Trim() ?? ""));
+            if (camara)
+                await BloquearCamara(control.Ubicacion, p.InicioFalla!.Value, p.Fecha, control.Observacion);
+            else if (p.LoteId is Guid loteId)
+                await BloquearLote(loteId, (p.Observacion?.Trim() ?? ""), null, p.InicioFalla);
             else
             {
                 var entrega = (await db.Entregas.FindAsync(p.EntregaId))!;
@@ -284,11 +305,43 @@ public class ServicioInventario(SgcpContext db, UnidadTrabajo unidad, ActorActua
                                          where d.PedidoId == entrega.PedidoId && r.Estado != EstadoReserva.LIBERADA
                                          select e.LoteId).Distinct().ToListAsync();
                 foreach (var lote in existencias)
-                    await BloquearLote(lote, (p.Observacion?.Trim() ?? ""));
+                    await BloquearLote(lote, (p.Observacion?.Trim() ?? ""), null, p.InicioFalla);
                 entrega.Version++;
             }
         }
         auditoria.Registrar("REGISTRAR_CONTROL_FRIO", "ControlFrio", control.Id);
         return control.Id;
     });
+
+    private static string Bolivia(DateTime utc) => utc.AddHours(-4).ToString("dd/MM/yyyy HH:mm");
+
+    /// <summary>Falla de una cámara: entra en revisión (bloqueado) todo lote que estuvo en ella desde el inicio de la falla hasta
+    /// la lectura: el que seguía con stock y el que tuvo movimientos después del inicio. Lo que salió antes queda libre.
+    /// Los derivados se bloquean solo si consumieron después del inicio. La incidencia deja anotado lo despachado en ese lapso.</summary>
+    private async Task BloquearCamara(string ubicacion, DateTime inicio, DateTime lectura, string observacion)
+    {
+        var candidatas = await db.Existencias.Where(e => e.Ubicacion == ubicacion)
+            .Select(e => new
+            {
+                e.Id,
+                e.LoteId,
+                e.CantidadFisica,
+                Ingreso = db.MovimientosStock.Where(m => m.ExistenciaId == e.Id && m.Tipo == "ENTRADA").Min(m => (DateTime?)m.Fecha),
+                MovioDespues = db.MovimientosStock.Any(m => m.ExistenciaId == e.Id && m.Fecha >= inicio),
+                Despachado = db.MovimientosStock.Where(m => m.ExistenciaId == e.Id && m.Tipo == "DESPACHO" && m.Fecha >= inicio)
+                    .Sum(m => (decimal?)-m.Cantidad) ?? 0
+            }).ToListAsync();
+        var visitados = new HashSet<Guid>();
+        foreach (var grupo in candidatas.Where(x => x.Ingreso != null && x.Ingreso <= lectura && (x.CantidadFisica > 0 || x.MovioDespues))
+                     .GroupBy(x => x.LoteId))
+        {
+            var lote = await db.Lotes.FindAsync(grupo.Key);
+            if (lote is null || lote.Estado == EstadoLote.BLOQUEADO)
+                continue;
+            var despachado = grupo.Sum(x => x.Despachado);
+            var motivo = $"Falla de frío en {ubicacion} desde {Bolivia(inicio)} (lectura {Bolivia(lectura)}): {observacion}"
+                + (despachado > 0 ? $" Atención: después del inicio de la falla se despacharon {despachado:0.###} {lote.Unidad} de este lote." : "");
+            await BloquearLote(lote.Id, motivo.Length > 1000 ? motivo[..1000] : motivo, visitados, inicio);
+        }
+    }
 }

@@ -15,8 +15,15 @@ namespace SGCP.Api.Controllers;
 public class ProduccionController(SgcpContext db, ServicioProduccion servicio) : ControllerBase
 {
     [HttpGet("animales")]
-    public async Task<IActionResult> Animales(int pagina = 1, int tamanoPagina = 20) =>
-        Ok(await db.Animales.AsNoTracking().OrderBy(x => x.Identificacion).Paginar(pagina, tamanoPagina));
+    public async Task<IActionResult> Animales(string? busqueda, EstadoAnimal? estado, int pagina = 1, int tamanoPagina = 20)
+    {
+        var q = db.Animales.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(busqueda))
+            q = q.Where(x => x.Identificacion.Contains(busqueda.Trim()) || x.Proveedor.Contains(busqueda.Trim()));
+        if (estado is not null)
+            q = q.Where(x => x.Estado == estado);
+        return Ok(await q.OrderBy(x => x.Identificacion).Paginar(pagina, tamanoPagina));
+    }
 
     [HttpPost("animales"), Authorize(Policy = "produccion.administrar")]
     public async Task<IActionResult> CrearAnimal(AnimalPeticion p) => StatusCode(201, new { Id = await servicio.Animal(null, p) });
