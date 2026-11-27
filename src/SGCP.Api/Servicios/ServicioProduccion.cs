@@ -44,8 +44,6 @@ public class ServicioProduccion(SgcpContext db, UnidadTrabajo unidad, ActorActua
     {
         Validar.FechaReal(p.Fecha);
         var animal = await db.Animales.FindAsync(id) ?? throw new ReglaException("NO_ENCONTRADO", "Animal no encontrado.", 404);
-        if (await db.ControlesSanitarios.AnyAsync(x => x.AnimalId == id && x.Fecha >= p.Fecha))
-            throw new ReglaException("CONTROL_FUERA_DE_ORDEN", "La fecha debe ser posterior al último control.");
         // Un animal rechazado o faenado ya no admite controles: ni un «Aprobado» que lo rehabilite ni un segundo rechazo
         // que duplique la incidencia.
         if (animal.Estado == EstadoAnimal.BLOQUEADO)
@@ -54,6 +52,8 @@ public class ServicioProduccion(SgcpContext db, UnidadTrabajo unidad, ActorActua
                 : "El animal ya está rechazado: su incidencia está registrada y no se rechaza otra vez.");
         if (animal.Estado == EstadoAnimal.FAENADO)
             throw new ReglaException("ANIMAL_NO_REHABILITABLE", "No se revierte un bloqueo ni un faeneo mediante otro control.");
+        if (await db.ControlesSanitarios.AnyAsync(x => x.AnimalId == id && x.Fecha >= p.Fecha))
+            throw new ReglaException("CONTROL_FUERA_DE_ORDEN", "La fecha debe ser posterior al último control.");
         var observacion = p.Observacion?.Trim() ?? "";
         if (p.Resultado == ResultadoSanitario.RECHAZADO && observacion.Length < 3)
             throw new ReglaException("MOTIVO_REQUERIDO", animal.Estado == EstadoAnimal.APTO

@@ -360,6 +360,28 @@ public static class Sprints234
         Check((await Ok("GET", "incidencias?tamanoPagina=100"))["elementos"]!.AsArray()
             .Any(x => x!["loteId"]?.ToString() == externoFrio && x["motivo"]!.ToString().StartsWith("Falla de frío en Cámara 7 desde")),
             "La incidencia del lote indica la cámara y desde cuándo falló");
+        Token(token);
+        var externoMinuto = Id(await Ok("POST", "lotes/externos", new
+        {
+            productoId = costilla,
+            codigo = "L-EXT-MINUTO",
+            referencia = "GUIA-MINUTO",
+            procedencia = "Proveedor externo",
+            fechaProduccion = DateTime.UtcNow.AddDays(-1),
+            vencimiento = DateTime.UtcNow.AddDays(5)
+        }));
+        await Ingresar(externoMinuto, 2m, "Cámara 9");
+        // La web manda la lectura al minuto: un lote que entró segundos después de HH:mm:00 también estuvo en la cámara.
+        var ahora = DateTime.UtcNow;
+        var lecturaMinuto = new DateTime(ahora.Year, ahora.Month, ahora.Day, ahora.Hour, ahora.Minute, 0, DateTimeKind.Utc);
+        Token(almacen.Token);
+        await Ok("POST", "controles-frio", new
+        {
+            temperatura = 10m, evaluacion = "RECHAZADO", ubicacion = "Cámara 9", fecha = lecturaMinuto, inicioFalla = lecturaMinuto.AddHours(-1),
+            observacion = "Lectura anotada al minuto"
+        });
+        Check((await Ok("GET", "lotes?tamanoPagina=100"))["elementos"]!.AsArray().Single(x => Id(x!) == externoMinuto)!["estado"]!.ToString() == "BLOQUEADO",
+            "Un lote que entró en el mismo minuto de la lectura también queda en revisión");
         var conIngreso = (await Ok("GET", "existencias?tamanoPagina=100"))["elementos"]!.AsArray().Single(x => Id(x!) == stockFrio.Existencia)!;
         Check(conIngreso["ingreso"] is not null && conIngreso["ingresoResponsableId"]!.ToString() == admin && conIngreso["procedencia"]!.ToString() == "Proveedor externo",
             "Existencias dice quién ingresó el lote a la cámara, cuándo y de dónde viene");

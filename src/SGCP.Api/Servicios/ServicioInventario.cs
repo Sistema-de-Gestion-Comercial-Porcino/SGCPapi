@@ -332,7 +332,9 @@ public class ServicioInventario(SgcpContext db, UnidadTrabajo unidad, ActorActua
                     .Sum(m => (decimal?)-m.Cantidad) ?? 0
             }).ToListAsync();
         var visitados = new HashSet<Guid>();
-        foreach (var grupo in candidatas.Where(x => x.Ingreso != null && x.Ingreso <= lectura && (x.CantidadFisica > 0 || x.MovioDespues))
+        // La lectura se anota al minuto (HH:mm): lo que entró dentro de ese mismo minuto también estuvo expuesto.
+        var limite = new DateTime(lectura.Ticks - lectura.Ticks % TimeSpan.TicksPerMinute, lectura.Kind).AddMinutes(1);
+        foreach (var grupo in candidatas.Where(x => x.Ingreso != null && x.Ingreso < limite && (x.CantidadFisica > 0 || x.MovioDespues))
                      .GroupBy(x => x.LoteId))
         {
             var lote = await db.Lotes.FindAsync(grupo.Key);
